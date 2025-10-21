@@ -4,9 +4,7 @@
 #include "InputHandler.h"
 
 int main() {
-    std::cout << "🚀 Space Courier - SFML 3.0.2 with Input System" << std::endl;
     
-    // Используем RenderWindow вместо Window для возможности отрисовки
     sf::RenderWindow window(sf::VideoMode({1200, 800}), "Space Courier - Input System Demo");
     window.setFramerateLimit(60);
     
@@ -16,12 +14,13 @@ int main() {
     // Привязываем действия к клавишам
     using Scancode = sf::Keyboard::Scancode;
     
+    // Кнопочки
     inputHandler.bindAction(Scancode::Space, []() {
-        std::cout << "🎮 ACTION: Jump!" << std::endl;
+        std::cout << "Прыжок" << std::endl;
     });
     
     inputHandler.bindAction(Scancode::E, []() {
-        std::cout << "🎮 ACTION: Pick up/deliver package!" << std::endl;
+        std::cout << "Действие" << std::endl;
     });
 
     // Игровые объекты
@@ -33,12 +32,9 @@ int main() {
     platform.setFillColor(sf::Color(100, 200, 100, 255));
     platform.setPosition({300.f, 600.f});
     
-    float playerSpeed = 3.0f;
+    float playerSpeed = 5.0f;
 
-    std::cout << "✅ Input system initialized!" << std::endl;
-    std::cout << "🎮 Use WASD to move the red circle!" << std::endl;
-
-    // Главный игровой цикл
+    // Игровой цикл
     while (window.isOpen()) {
         inputHandler.update();
         
@@ -78,6 +74,5 @@ int main() {
         window.display();
     }
     
-    std::cout << "👋 Game closed successfully!" << std::endl;
     return 0;
 }
