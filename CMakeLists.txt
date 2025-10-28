@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Настройки для macOS
-set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0")
 
 # Пути для Homebrew
 set(HOMEBREW_PREFIX "/opt/homebrew")
@@ -31,6 +31,7 @@ add_executable(SpaceCourier
     src/Player.cpp
     src/Platform.cpp
     src/Level.cpp
+    src/Enemy.cpp 
 )
 
 # Заголовочные файлы

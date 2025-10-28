@@ -8,7 +8,6 @@ Platform::Platform(const sf::Vector2f& size, const sf::Vector2f& position, const
 }
 
 void Platform::update(float deltaTime) {
-    // Платформы статичны, ничего не делаем
 }
 
 void Platform::draw(sf::RenderWindow& window) const {

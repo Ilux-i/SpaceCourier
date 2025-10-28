@@ -70,27 +70,22 @@ sf::Vector2f InputHandler::getMovementVector() const {
     
     using Scancode = sf::Keyboard::Scancode;
     
-    // Движение влево
     if (isKeyPressed(Scancode::A) || isKeyPressed(Scancode::Left)) {
         movement.x -= 1.f;
     }
     
-    // Движение вправо
     if (isKeyPressed(Scancode::D) || isKeyPressed(Scancode::Right)) {
         movement.x += 1.f;
     }
     
-    // Движение вверх
     if (isKeyPressed(Scancode::W) || isKeyPressed(Scancode::Up)) {
         movement.y -= 1.f;
     }
     
-    // Движение вниз
     if (isKeyPressed(Scancode::S) || isKeyPressed(Scancode::Down)) {
         movement.y += 1.f;
     }
     
-    // Диагональное движение
     if (movement.x != 0.f || movement.y != 0.f) {
         float length = std::sqrt(movement.x * movement.x + movement.y * movement.y);
         movement.x /= length;

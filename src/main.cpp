@@ -8,26 +8,17 @@ int main() {
     std::cout << "🚀 Space Courier - Game Launch!" << std::endl;
     
     try {
-        // Используем английский заголовок как в тесте
         sf::RenderWindow window(sf::VideoMode({1200, 800}), sf::String("Space Courier"));
         window.setFramerateLimit(60);
         
-        // Инициализируем систему ввода и уровень
         InputHandler inputHandler;
         Level level;
         
-        // Привязываем действия к клавишам
-        using Scancode = sf::Keyboard::Scancode;
-        
-        inputHandler.bindAction(Scancode::Space, [&level]() {
-            level.getPlayer().jump();
-        });
-        
-        inputHandler.bindAction(Scancode::E, []() {
+        // Оставляем только взаимодействие с E
+        inputHandler.bindAction(sf::Keyboard::Scancode::E, []() {
             std::cout << "📦 Package interaction" << std::endl;
         });
 
-        // Таймер для дельты времени
         sf::Clock clock;
         
         std::cout << "🎮 Controls:" << std::endl;
@@ -51,7 +42,7 @@ int main() {
                 inputHandler.handleEvent(*event);
                 
                 if (const auto* keyEvent = event->getIf<sf::Event::KeyPressed>()) {
-                    if (keyEvent->scancode == Scancode::Escape) {
+                    if (keyEvent->scancode == sf::Keyboard::Scancode::Escape) {
                         window.close();
                     }
                 }
@@ -61,11 +52,16 @@ int main() {
             sf::Vector2f movement = inputHandler.getMovementVector();
             level.getPlayer().move(movement);
             
+            // 🔧 ПРЫЖОК - мгновенная реакция через isKeyPressed
+            if (inputHandler.isKeyPressed(sf::Keyboard::Scancode::Space)) {
+                level.getPlayer().jump();
+            }
+            
             // Обновление уровня
             level.update(deltaTime);
 
             // Отрисовка
-            window.clear(sf::Color(30, 30, 60, 255)); // Space background
+            window.clear(sf::Color(30, 30, 60, 255));
             level.draw(window);
             window.display();
         }

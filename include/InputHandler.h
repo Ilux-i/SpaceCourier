@@ -21,6 +21,8 @@ public:
     
     sf::Vector2f getMovementVector() const;
 
+    void handleInstantJump(sf::Keyboard::Scancode key, std::function<void()> jumpCallback);
+
 private:
     struct KeyState {
         bool isPressed = false;

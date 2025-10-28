@@ -3,13 +3,18 @@
 #include <algorithm>
 
 Level::Level() {
-    // В SFML 3.0.2 FloatRect создается через position и size
     levelBounds = sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1200.f, 800.f));
     createFirstLocation();
 }
 
 void Level::update(float deltaTime) {
     player.update(deltaTime);
+    
+    // Обновляем врагов
+    for (auto& enemy : enemies) {
+        enemy->update(deltaTime);
+    }
+    
     handleCollisions();
 }
 
@@ -17,13 +22,19 @@ void Level::draw(sf::RenderWindow& window) const {
     for (const auto& platform : platforms) {
         platform->draw(window);
     }
+    
+    // Рисуем врагов
+    for (const auto& enemy : enemies) {
+        enemy->draw(window);
+    }
+    
     player.draw(window);
 }
 
 void Level::handleCollisions() {
     player.setOnGround(false);
     
-    // Коллизии с платформами
+    // КОЛЛИЗИИ С ПЛАТФОРМАМИ (ВОССТАНАВЛИВАЕМ)
     for (const auto& platform : platforms) {
         if (player.getBounds().findIntersection(platform->getBounds()).has_value()) {
             // Определяем сторону столкновения
@@ -76,6 +87,9 @@ void Level::handleCollisions() {
         }
     }
     
+    // Коллизии с врагами (НОВАЯ ФУНКЦИЯ)
+    handlePlayerEnemyCollisions();
+    
     // Границы уровня
     sf::Vector2f playerPos = player.getPosition();
     sf::FloatRect playerBounds = player.getBounds();
@@ -105,8 +119,28 @@ void Level::handleCollisions() {
     }
 }
 
+void Level::handlePlayerEnemyCollisions() {
+    for (auto& enemy : enemies) {
+        if (enemy->isActive() && player.getBounds().findIntersection(enemy->getBounds()).has_value()) {
+            enemy->onCollisionWithPlayer();
+            
+            // УСИЛЕННОЕ отбрасывание игрока
+            sf::Vector2f knockback = player.getPosition() - enemy->getPosition();
+            float length = std::sqrt(knockback.x * knockback.x + knockback.y * knockback.y);
+            if (length > 0) {
+                knockback.x /= length;
+                knockback.y /= length;
+            }
+            // Увеличиваем силу и добавляем "подскок"
+            player.setVelocity(knockback * 600.f + sf::Vector2f(0.f, -300.f));
+            
+            std::cout << "💥 Столкновение с дроном! Игрок отброшен." << std::endl;
+        }
+    }
+}
+
 void Level::createFirstLocation() {
-    std::cout << "🗺️ Создаем первую локацию..." << std::endl;
+    std::cout << "🗺️ Создаем первую локацию с врагами-дронами..." << std::endl;
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -139,8 +173,26 @@ void Level::createFirstLocation() {
         sf::Color(100, 100, 150, 255)
     ));
     
+    // Враги-дроны
+    enemies.push_back(std::make_unique<Enemy>(
+        sf::Vector2f(200.f, 450.f),
+        sf::Vector2f(300.f, 450.f)
+    ));
+    
+    enemies.push_back(std::make_unique<Enemy>(
+        sf::Vector2f(500.f, 350.f),
+        sf::Vector2f(600.f, 350.f)
+    ));
+    
+    enemies.push_back(std::make_unique<Enemy>(
+        sf::Vector2f(800.f, 250.f),
+        sf::Vector2f(800.f, 350.f)
+    ));
+    
     // Устанавливаем игрока на стартовую позицию
     player.setPosition(sf::Vector2f(150.f, 450.f));
+    
+    std::cout << "✅ Добавлено врагов-дронов: " << enemies.size() << std::endl;
 }
 
 Player& Level::getPlayer() {

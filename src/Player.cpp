@@ -33,7 +33,6 @@ void Player::jump() {
     if (onGround) {
         velocity.y = -jumpForce;
         onGround = false;
-        std::cout << "🔼 Игрок прыгнул!" << std::endl;
     }
 }
 

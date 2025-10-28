@@ -1,6 +1,7 @@
 #pragma once
 #include "Player.h"
 #include "Platform.h"
+#include "Enemy.h"
 #include <vector>
 #include <memory>
 
@@ -19,7 +20,10 @@ public:
 private:
     Player player;
     std::vector<std::unique_ptr<Platform>> platforms;
+    std::vector<std::unique_ptr<Enemy>> enemies;  // Добавили врагов
     
     // Границы уровня
     sf::FloatRect levelBounds;
+    
+    void handlePlayerEnemyCollisions();  // Новая функция для врагов
 };
