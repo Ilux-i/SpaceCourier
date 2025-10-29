@@ -25,5 +25,9 @@ private:
     // Границы уровня
     sf::FloatRect levelBounds;
     
-    void handlePlayerEnemyCollisions();  // Новая функция для врагов
+    void handlePlayerEnemyCollisions();
+    
+    // НОВЫЕ МЕТОДЫ ДЛЯ РЕСПАВНА
+    void respawnLevel();
+    void respawnPlayer();
 };

@@ -8,6 +8,8 @@ Player::Player() : onGround(false), jumpForce(500.f), moveSpeed(300.f), gravity(
 }
 
 void Player::update(float deltaTime) {
+    healthSystem.update(deltaTime);
+    
     // Применяем гравитацию
     if (!onGround) {
         velocity.y += gravity * deltaTime;
@@ -23,6 +25,7 @@ void Player::update(float deltaTime) {
 
 void Player::draw(sf::RenderWindow& window) const {
     window.draw(shape);
+    healthSystem.draw(window);  // Рисуем здоровье
 }
 
 sf::FloatRect Player::getBounds() const {
@@ -30,14 +33,17 @@ sf::FloatRect Player::getBounds() const {
 }
 
 void Player::jump() {
-    if (onGround) {
+    if (onGround && healthSystem.isAlive()) {
         velocity.y = -jumpForce;
         onGround = false;
+        std::cout << "🔼 Игрок прыгнул!" << std::endl;
     }
 }
 
 void Player::move(const sf::Vector2f& direction) {
-    velocity.x = direction.x * moveSpeed;
+    if (healthSystem.isAlive()) {
+        velocity.x = direction.x * moveSpeed;
+    }
 }
 
 void Player::applyGravity(float deltaTime) {
@@ -52,4 +58,12 @@ bool Player::isOnGround() const {
 
 void Player::setOnGround(bool grounded) {
     onGround = grounded;
+}
+
+HealthSystem& Player::getHealthSystem() {
+    return healthSystem;
+}
+
+void Player::takeDamage() {
+    healthSystem.takeDamage();
 }

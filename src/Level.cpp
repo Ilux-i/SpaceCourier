@@ -1,21 +1,29 @@
 #include "Level.h"
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 
 Level::Level() {
+    // Используем конструктор с двумя векторами
     levelBounds = sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1200.f, 800.f));
     createFirstLocation();
 }
 
 void Level::update(float deltaTime) {
-    player.update(deltaTime);
-    
-    // Обновляем врагов
-    for (auto& enemy : enemies) {
-        enemy->update(deltaTime);
+    // Проверяем жив ли игрок перед обновлением
+    if (player.getHealthSystem().isAlive()) {
+        player.update(deltaTime);
+        
+        // Обновляем врагов
+        for (auto& enemy : enemies) {
+            enemy->update(deltaTime);
+        }
+        
+        handleCollisions();
+    } else {
+        // Игрок мертв - респавним уровень
+        respawnLevel();
     }
-    
-    handleCollisions();
 }
 
 void Level::draw(sf::RenderWindow& window) const {
@@ -23,7 +31,6 @@ void Level::draw(sf::RenderWindow& window) const {
         platform->draw(window);
     }
     
-    // Рисуем врагов
     for (const auto& enemy : enemies) {
         enemy->draw(window);
     }
@@ -34,7 +41,7 @@ void Level::draw(sf::RenderWindow& window) const {
 void Level::handleCollisions() {
     player.setOnGround(false);
     
-    // КОЛЛИЗИИ С ПЛАТФОРМАМИ (ВОССТАНАВЛИВАЕМ)
+    // Коллизии с платформами
     for (const auto& platform : platforms) {
         if (player.getBounds().findIntersection(platform->getBounds()).has_value()) {
             // Определяем сторону столкновения
@@ -87,7 +94,7 @@ void Level::handleCollisions() {
         }
     }
     
-    // Коллизии с врагами (НОВАЯ ФУНКЦИЯ)
+    // Коллизии с врагами
     handlePlayerEnemyCollisions();
     
     // Границы уровня
@@ -113,9 +120,13 @@ void Level::handleCollisions() {
     }
     // Нижняя граница (смерть от падения)
     if (playerPos.y > levelPos.y + levelSize.y) {
-        std::cout << "💀 Игрок упал в пропасть! Респавн..." << std::endl;
-        player.setPosition(sf::Vector2f(100.f, 100.f));
-        player.setVelocity(sf::Vector2f(0.f, 0.f));
+        std::cout << "💀 Игрок упал в пропасть!" << std::endl;
+        player.takeDamage();
+        
+        if (player.getHealthSystem().isAlive()) {
+            // Респавн игрока если еще есть жизни
+            respawnPlayer();
+        }
     }
 }
 
@@ -123,24 +134,68 @@ void Level::handlePlayerEnemyCollisions() {
     for (auto& enemy : enemies) {
         if (enemy->isActive() && player.getBounds().findIntersection(enemy->getBounds()).has_value()) {
             enemy->onCollisionWithPlayer();
+            player.takeDamage();  // Урон игроку
             
-            // УСИЛЕННОЕ отбрасывание игрока
+            // Отбрасывание
             sf::Vector2f knockback = player.getPosition() - enemy->getPosition();
             float length = std::sqrt(knockback.x * knockback.x + knockback.y * knockback.y);
             if (length > 0) {
                 knockback.x /= length;
                 knockback.y /= length;
             }
-            // Увеличиваем силу и добавляем "подскок"
             player.setVelocity(knockback * 600.f + sf::Vector2f(0.f, -300.f));
             
-            std::cout << "💥 Столкновение с дроном! Игрок отброшен." << std::endl;
+            std::cout << "💥 Столкновение с дроном! Здоровье: " 
+                      << player.getHealthSystem().getHealth() << "/3" << std::endl;
+            
+            // Если игрок умер - респавн
+            if (!player.getHealthSystem().isAlive()) {
+                std::cout << "💀 Игрок умер от дрона!" << std::endl;
+            }
         }
     }
 }
 
+// МЕТОД: Респавн всего уровня
+void Level::respawnLevel() {
+    std::cout << "🔄 Респавн уровня..." << std::endl;
+    
+    // Сбрасываем здоровье игрока
+    player.getHealthSystem().reset();
+    
+    // Респавним игрока
+    respawnPlayer();
+    
+    // Респавним всех врагов (сбрасываем их состояние)
+    for (auto& enemy : enemies) {
+        // Для респавна врагов нужно будет добавить соответствующий метод в класс Enemy
+        // Пока просто оставляем как есть
+    }
+    
+    std::cout << "✅ Уровень перезапущен! Здоровье: " 
+              << player.getHealthSystem().getHealth() << "/3" << std::endl;
+}
+
+// МЕТОД: Респавн игрока
+void Level::respawnPlayer() {
+    // Устанавливаем игрока на стартовую позицию
+    player.setPosition(sf::Vector2f(150.f, 450.f));
+    player.setVelocity(sf::Vector2f(0.f, 0.f));
+    player.setOnGround(false);
+    
+    // ВАЖНО: Сбрасываем здоровье игрока
+    player.getHealthSystem().reset();
+    
+    std::cout << "👤 Игрок респавнут на стартовой позиции. Здоровье: " 
+              << player.getHealthSystem().getHealth() << "/3" << std::endl;
+}
+
 void Level::createFirstLocation() {
     std::cout << "🗺️ Создаем первую локацию с врагами-дронами..." << std::endl;
+    
+    // Очищаем предыдущие объекты (если были)
+    platforms.clear();
+    enemies.clear();
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -190,7 +245,7 @@ void Level::createFirstLocation() {
     ));
     
     // Устанавливаем игрока на стартовую позицию
-    player.setPosition(sf::Vector2f(150.f, 450.f));
+    respawnPlayer();
     
     std::cout << "✅ Добавлено врагов-дронов: " << enemies.size() << std::endl;
 }
