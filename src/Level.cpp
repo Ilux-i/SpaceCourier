@@ -4,7 +4,6 @@
 #include <cmath>
 
 Level::Level() {
-    // Используем конструктор с двумя векторами
     levelBounds = sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1200.f, 800.f));
     createFirstLocation();
 }
@@ -19,22 +18,43 @@ void Level::update(float deltaTime) {
             enemy->update(deltaTime);
         }
         
+        // Обновляем точки доставки
+        for (auto& deliveryPoint : deliveryPoints) {
+            deliveryPoint->update(deltaTime);
+        }
+        
         handleCollisions();
+        // УБРАЛИ ВЫЗОВЫ handlePackageInteractions и handleDeliveryInteractions
+        // Теперь взаимодействие ТОЛЬКО через handleEInteraction() по нажатию E
     } else {
         // Игрок мертв - респавним уровень
+        std::cout << "💀 Игрок умер! Запускаем респавн уровня..." << std::endl;
         respawnLevel();
     }
 }
 
 void Level::draw(sf::RenderWindow& window) const {
+    // Рисуем платформы
     for (const auto& platform : platforms) {
         platform->draw(window);
     }
     
+    // Рисуем точки доставки
+    for (const auto& deliveryPoint : deliveryPoints) {
+        deliveryPoint->draw(window);
+    }
+    
+    // Рисуем посылки
+    for (const auto& package : packages) {
+        package->draw(window);
+    }
+    
+    // Рисуем врагов
     for (const auto& enemy : enemies) {
         enemy->draw(window);
     }
     
+    // Рисуем игрока
     player.draw(window);
 }
 
@@ -44,63 +64,15 @@ void Level::handleCollisions() {
     // Коллизии с платформами
     for (const auto& platform : platforms) {
         if (player.getBounds().findIntersection(platform->getBounds()).has_value()) {
-            // Определяем сторону столкновения
-            sf::FloatRect playerBounds = player.getBounds();
-            sf::FloatRect platformBounds = platform->getBounds();
-            
-            // В SFML 3.0.2 position и size - это поля
-            sf::Vector2f playerPos = playerBounds.position;
-            sf::Vector2f playerSize = playerBounds.size;
-            float playerLeft = playerPos.x;
-            float playerRight = playerPos.x + playerSize.x;
-            float playerTop = playerPos.y;
-            float playerBottom = playerPos.y + playerSize.y;
-            
-            sf::Vector2f platformPos = platformBounds.position;
-            sf::Vector2f platformSize = platformBounds.size;
-            float platformLeft = platformPos.x;
-            float platformRight = platformPos.x + platformSize.x;
-            float platformTop = platformPos.y;
-            float platformBottom = platformPos.y + platformSize.y;
-            
-            // Вычисляем перекрытия
-            float overlapLeft = playerRight - platformLeft;
-            float overlapRight = platformRight - playerLeft;
-            float overlapTop = playerBottom - platformTop;
-            float overlapBottom = platformBottom - playerTop;
-            
-            // Находим минимальное перекрытие
-            float minOverlap = std::min({overlapLeft, overlapRight, overlapTop, overlapBottom});
-            
-            if (minOverlap == overlapTop) {
-                // Столкновение сверху (игрок на платформе)
-                player.setPosition(sf::Vector2f(player.getPosition().x, platformTop - playerSize.y));
-                player.setOnGround(true);
-                player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
-            }
-            else if (minOverlap == overlapBottom) {
-                // Столкновение снизу
-                player.setPosition(sf::Vector2f(player.getPosition().x, platformBottom));
-                player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
-            }
-            else if (minOverlap == overlapLeft) {
-                // Столкновение слева
-                player.setPosition(sf::Vector2f(platformLeft - playerSize.x, player.getPosition().y));
-            }
-            else if (minOverlap == overlapRight) {
-                // Столкновение справа
-                player.setPosition(sf::Vector2f(platformRight, player.getPosition().y));
-            }
+            handlePlayerPlatformCollision(*platform);
         }
     }
     
-    // Коллизии с врагами
     handlePlayerEnemyCollisions();
     
     // Границы уровня
     sf::Vector2f playerPos = player.getPosition();
     sf::FloatRect playerBounds = player.getBounds();
-    sf::Vector2f playerSize = playerBounds.size;
     
     sf::Vector2f levelPos = levelBounds.position;
     sf::Vector2f levelSize = levelBounds.size;
@@ -110,8 +82,8 @@ void Level::handleCollisions() {
         player.setPosition(sf::Vector2f(levelPos.x, playerPos.y));
     }
     // Правая граница
-    if (playerPos.x + playerSize.x > levelPos.x + levelSize.x) {
-        player.setPosition(sf::Vector2f(levelPos.x + levelSize.x - playerSize.x, playerPos.y));
+    if (playerPos.x + playerBounds.size.x > levelPos.x + levelSize.x) {
+        player.setPosition(sf::Vector2f(levelPos.x + levelSize.x - playerBounds.size.x, playerPos.y));
     }
     // Верхняя граница
     if (playerPos.y < levelPos.y) {
@@ -123,10 +95,93 @@ void Level::handleCollisions() {
         std::cout << "💀 Игрок упал в пропасть!" << std::endl;
         player.takeDamage();
         
-        if (player.getHealthSystem().isAlive()) {
-            // Респавн игрока если еще есть жизни
-            respawnPlayer();
+        // ВСЕГДА ВЫЗЫВАЕМ ПОЛНЫЙ РЕСПАВН УРОВНЯ ПРИ ПАДЕНИИ В ПРОПАСТЬ
+        std::cout << "🔄 Запуск полного респавна уровня..." << std::endl;
+        respawnLevel();
+    }
+}
+
+// МЕТОД ДЛЯ КОЛЛИЗИЙ С ПЛАТФОРМАМИ
+void Level::handlePlayerPlatformCollision(const Platform& platform) {
+    sf::FloatRect playerBounds = player.getBounds();
+    sf::FloatRect platformBounds = platform.getBounds();
+    
+    auto intersection = playerBounds.findIntersection(platformBounds);
+    if (!intersection.has_value()) return;
+    
+    sf::FloatRect overlap = intersection.value();
+    
+    // Определяем направление коллизии
+    if (overlap.size.x < overlap.size.y) {
+        // Горизонтальная коллизия
+        if (playerBounds.position.x < platformBounds.position.x) {
+            // Игрок слева от платформы
+            player.setPosition(sf::Vector2f(
+                platformBounds.position.x - playerBounds.size.x,
+                player.getPosition().y
+            ));
+        } else {
+            // Игрок справа от платформы
+            player.setPosition(sf::Vector2f(
+                platformBounds.position.x + platformBounds.size.x,
+                player.getPosition().y
+            ));
         }
+        player.setVelocity(sf::Vector2f(0.f, player.getVelocity().y));
+    } else {
+        // Вертикальная коллизия
+        if (playerBounds.position.y < platformBounds.position.y) {
+            // Игрок над платформой (приземление)
+            player.setPosition(sf::Vector2f(
+                player.getPosition().x,
+                platformBounds.position.y - playerBounds.size.y
+            ));
+            player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+            player.setOnGround(true);
+        } else {
+            // Игрок под платформой (удар головой)
+            player.setPosition(sf::Vector2f(
+                player.getPosition().x,
+                platformBounds.position.y + platformBounds.size.y
+            ));
+            player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+        }
+    }
+}
+
+// ЕДИНСТВЕННЫЙ МЕТОД ДЛЯ ВЗАИМОДЕЙСТВИЯ С E
+void Level::handleEInteraction() {
+    Player& player = getPlayer();
+    
+    std::cout << "🔄 Обработка E-взаимодействия..." << std::endl;
+    
+    // СНАЧАЛА проверяем доставку (если несем посылку)
+    if (player.isCarryingPackage()) {
+        std::cout << "   Проверка доставки..." << std::endl;
+        for (auto& deliveryPoint : deliveryPoints) {
+            if (deliveryPoint->isActive() && 
+                player.getBounds().findIntersection(deliveryPoint->getBounds()).has_value()) {
+                
+                player.deliverPackage();
+                std::cout << "🎉 Посылка успешно доставлена!" << std::endl;
+                return;
+            }
+        }
+        std::cout << "❌ Нет точки доставки рядом!" << std::endl;
+    } 
+    // ЗАТЕМ проверяем подбор (если не несем посылку)
+    else {
+        std::cout << "   Проверка подбора посылки..." << std::endl;
+        for (auto& package : packages) {
+            if (!package->isDelivered() && !package->isCarried() && 
+                player.getBounds().findIntersection(package->getBounds()).has_value()) {
+                
+                player.pickUpPackage(package.get());
+                std::cout << "📦 Посылка поднята!" << std::endl;
+                return;
+            }
+        }
+        std::cout << "❌ Нет посылки для подбора рядом!" << std::endl;
     }
 }
 
@@ -134,7 +189,7 @@ void Level::handlePlayerEnemyCollisions() {
     for (auto& enemy : enemies) {
         if (enemy->isActive() && player.getBounds().findIntersection(enemy->getBounds()).has_value()) {
             enemy->onCollisionWithPlayer();
-            player.takeDamage();  // Урон игроку
+            player.takeDamage();
             
             // Отбрасывание
             sf::Vector2f knockback = player.getPosition() - enemy->getPosition();
@@ -148,7 +203,6 @@ void Level::handlePlayerEnemyCollisions() {
             std::cout << "💥 Столкновение с дроном! Здоровье: " 
                       << player.getHealthSystem().getHealth() << "/3" << std::endl;
             
-            // Если игрок умер - респавн
             if (!player.getHealthSystem().isAlive()) {
                 std::cout << "💀 Игрок умер от дрона!" << std::endl;
             }
@@ -156,46 +210,56 @@ void Level::handlePlayerEnemyCollisions() {
     }
 }
 
-// МЕТОД: Респавн всего уровня
 void Level::respawnLevel() {
     std::cout << "🔄 Респавн уровня..." << std::endl;
     
-    // Сбрасываем здоровье игрока
+    // СБРАСЫВАЕМ ЗДОРОВЬЕ ИГРОКА
     player.getHealthSystem().reset();
     
-    // Респавним игрока
+    // РЕСПАВНИМ ИГРОКА
     respawnPlayer();
     
-    // Респавним всех врагов (сбрасываем их состояние)
-    for (auto& enemy : enemies) {
-        // Для респавна врагов нужно будет добавить соответствующий метод в класс Enemy
-        // Пока просто оставляем как есть
+    // ВОССТАНАВЛИВАЕМ ПОСЫЛКИ НА НАЧАЛЬНЫЕ ПОЗИЦИИ
+    for (size_t i = 0; i < packages.size() && i < packageStartPositions.size(); ++i) {
+        packages[i]->setCarried(false);
+        packages[i]->setDelivered(false);
+        
+        // ЯВНО УСТАНАВЛИВАЕМ ПОЗИЦИЮ И ОБНОВЛЯЕМ
+        sf::Vector2f startPos = packageStartPositions[i];
+        packages[i]->setPosition(startPos);
+        
+        // ВЫЗЫВАЕМ update ДЛЯ ПРИМЕНЕНИЯ ИЗМЕНЕНИЙ
+        packages[i]->update(0.f);
+        
+        std::cout << "📦 Посылка " << i << " возвращена в позицию: (" 
+                  << startPos.x << ", " << startPos.y << ")" << std::endl;
     }
     
     std::cout << "✅ Уровень перезапущен! Здоровье: " 
               << player.getHealthSystem().getHealth() << "/3" << std::endl;
 }
 
-// МЕТОД: Респавн игрока
 void Level::respawnPlayer() {
-    // Устанавливаем игрока на стартовую позицию
     player.setPosition(sf::Vector2f(150.f, 450.f));
     player.setVelocity(sf::Vector2f(0.f, 0.f));
     player.setOnGround(false);
     
-    // ВАЖНО: Сбрасываем здоровье игрока
-    player.getHealthSystem().reset();
+    // Сбрасываем посылку если игрок её нёс
+    if (player.isCarryingPackage()) {
+        std::cout << "🔄 Сбрасываем carried package..." << std::endl;
+        player.deliverPackage();
+    }
     
-    std::cout << "👤 Игрок респавнут на стартовой позиции. Здоровье: " 
-              << player.getHealthSystem().getHealth() << "/3" << std::endl;
+    std::cout << "👤 Игрок респавнут на стартовой позиции" << std::endl;
 }
 
 void Level::createFirstLocation() {
-    std::cout << "🗺️ Создаем первую локацию с врагами-дронами..." << std::endl;
+    std::cout << "🗺️ Создаем первую локацию с посылками..." << std::endl;
     
-    // Очищаем предыдущие объекты (если были)
     platforms.clear();
     enemies.clear();
+    packages.clear();
+    deliveryPoints.clear();
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -228,7 +292,7 @@ void Level::createFirstLocation() {
         sf::Color(100, 100, 150, 255)
     ));
     
-    // Враги-дроны
+    // Враги
     enemies.push_back(std::make_unique<Enemy>(
         sf::Vector2f(200.f, 450.f),
         sf::Vector2f(300.f, 450.f)
@@ -239,15 +303,26 @@ void Level::createFirstLocation() {
         sf::Vector2f(600.f, 350.f)
     ));
     
-    enemies.push_back(std::make_unique<Enemy>(
-        sf::Vector2f(800.f, 250.f),
-        sf::Vector2f(800.f, 350.f)
-    ));
+    packageStartPositions.clear();
+    deliveryPointStartPositions.clear();
     
-    // Устанавливаем игрока на стартовую позицию
+    // ПОСЫЛКА НА САМОЙ ВЕРХНЕЙ ПЛАТФОРМЕ
+    packages.push_back(std::make_unique<Package>(
+        sf::Vector2f(750.f, 250.f)
+    ));
+    packageStartPositions.push_back(sf::Vector2f(750.f, 250.f));
+    
+    // ТОЧКА ДОСТАВКИ ЗА СТЕНКОЙ
+    deliveryPoints.push_back(std::make_unique<DeliveryPoint>(
+        sf::Vector2f(950.f, 650.f)
+    ));
+    deliveryPointStartPositions.push_back(sf::Vector2f(950.f, 650.f));
+    
     respawnPlayer();
     
-    std::cout << "✅ Добавлено врагов-дронов: " << enemies.size() << std::endl;
+    std::cout << "✅ Добавлено: " << enemies.size() << " врагов, " 
+              << packages.size() << " посылка, " 
+              << deliveryPoints.size() << " точка доставки" << std::endl;
 }
 
 Player& Level::getPlayer() {

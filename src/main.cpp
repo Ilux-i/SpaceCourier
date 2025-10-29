@@ -14,9 +14,10 @@ int main() {
         InputHandler inputHandler;
         Level level;
         
-        // Оставляем только взаимодействие с E
-        inputHandler.bindAction(sf::Keyboard::Scancode::E, []() {
-            std::cout << "📦 Package interaction" << std::endl;
+        // Обработчик взаимодействия с посылками
+        inputHandler.bindAction(sf::Keyboard::Scancode::E, [&level]() {
+            std::cout << "🎮 Нажата клавиша E - обработка взаимодействия..." << std::endl;
+            level.handleEInteraction();
         });
 
         sf::Clock clock;
@@ -24,7 +25,7 @@ int main() {
         std::cout << "🎮 Controls:" << std::endl;
         std::cout << "   WASD/Arrows - Movement" << std::endl;
         std::cout << "   SPACE - Jump" << std::endl;
-        std::cout << "   E - Interact" << std::endl;
+        std::cout << "   E - Pick up/Deliver package" << std::endl;
         std::cout << "   ESC - Exit" << std::endl;
 
         // Игровой цикл
@@ -45,6 +46,10 @@ int main() {
                     if (keyEvent->scancode == sf::Keyboard::Scancode::Escape) {
                         window.close();
                     }
+                    // ДОБАВЛЯЕМ ОТЛАДОЧНУЮ ПЕЧАТЬ ДЛЯ КЛАВИШИ E
+                    if (keyEvent->scancode == sf::Keyboard::Scancode::E) {
+                        std::cout << "🔍 Клавиша E нажата (обработка в InputHandler)" << std::endl;
+                    }
                 }
             }
 
@@ -52,7 +57,7 @@ int main() {
             sf::Vector2f movement = inputHandler.getMovementVector();
             level.getPlayer().move(movement);
             
-            // 🔧 ПРЫЖОК - мгновенная реакция через isKeyPressed
+            // Прыжок
             if (inputHandler.isKeyPressed(sf::Keyboard::Scancode::Space)) {
                 level.getPlayer().jump();
             }

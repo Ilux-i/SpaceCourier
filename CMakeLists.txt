@@ -33,6 +33,8 @@ add_executable(SpaceCourier
     src/Level.cpp
     src/Enemy.cpp 
     src/HealthSystem.cpp
+    src/Package.cpp
+    src/DeliveryPoint.cpp
 )
 
 # Заголовочные файлы

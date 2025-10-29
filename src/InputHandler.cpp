@@ -13,17 +13,13 @@ void InputHandler::update() {
 
 // Обработчик событий
 void InputHandler::handleEvent(const sf::Event& event) {
-
     if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
-        // События клавиши
         const sf::Event::KeyPressed* keyPressedEvent = event.getIf<sf::Event::KeyPressed>();
         const sf::Event::KeyReleased* keyReleasedEvent = event.getIf<sf::Event::KeyReleased>();
         
-        // Определяем какая клавиша и состояние
         sf::Keyboard::Scancode key;
         bool isPressed;
         
-        // Обробатывает состояние клавиши
         if (keyPressedEvent) {
             key = keyPressedEvent->scancode;
             isPressed = true;
@@ -39,11 +35,11 @@ void InputHandler::handleEvent(const sf::Event& event) {
         
         // Если клавиша только что нажата - вызываем callback
         if (isPressed && actionCallbacks_.count(key)) {
+            std::cout << "🎯 Вызов callback для клавиши: " << static_cast<int>(key) << std::endl;
             for (const auto& callback : actionCallbacks_.at(key)) {
                 callback();
             }
         }
-        
     }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "Entity.h"
 #include "HealthSystem.h"
+#include "Package.h" // ДОБАВЛЯЕМ
 #include <SFML/Graphics.hpp>
 
 class Player : public Entity {
@@ -21,6 +22,13 @@ public:
     HealthSystem& getHealthSystem();
     void takeDamage();
     
+    // НОВЫЕ МЕТОДЫ ДЛЯ ПОСЫЛОК
+    bool isCarryingPackage() const;
+    void pickUpPackage(Package* package);
+    void deliverPackage();
+    Package* getCarriedPackage();
+    float getMoveSpeed() const;
+    
 private:
     sf::CircleShape shape;
     bool onGround;
@@ -28,5 +36,9 @@ private:
     float moveSpeed;
     float gravity;
     
-    HealthSystem healthSystem;  // Добавляем систему здоровья
+    HealthSystem healthSystem;
+    
+    // ПОСЫЛКА
+    Package* carriedPackage;
+    float baseMoveSpeed; // Базовая скорость без посылки
 };
