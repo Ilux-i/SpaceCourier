@@ -35,6 +35,8 @@ add_executable(SpaceCourier
     src/HealthSystem.cpp
     src/Package.cpp
     src/DeliveryPoint.cpp
+    src/Game.cpp
+    src/Menu.cpp 
 )
 
 # Заголовочные файлы
