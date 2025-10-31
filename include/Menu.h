@@ -16,15 +16,26 @@ public:
     void clearButtons();
     void setTitle(const std::string& title);
     
+    bool loadFont(const std::string& fontPath);
+    
 private:
     struct Button {
         sf::RectangleShape shape;
+        sf::Text text;
         std::function<void()> action;
         bool isHovered;
+        std::string label;
+        
+        // Конструктор для инициализации text
+        Button(const sf::Font& font, const std::string& labelText = "") 
+            : text(font, labelText, 28), isHovered(false), label(labelText) {}
     };
     
     std::vector<Button> buttons;
+    sf::Font font;
     std::string title;
+    bool fontLoaded;
     
     void setupMainMenu();
+    void createText(sf::Text& text, const std::string& content, unsigned int size, const sf::Vector2f& position) const;
 };

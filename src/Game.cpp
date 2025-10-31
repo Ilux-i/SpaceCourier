@@ -110,44 +110,49 @@ void Game::setupMenus() {
     // Настройка главного меню
     mainMenu.setTitle("SPACE COURIER");
     mainMenu.clearButtons();
-    mainMenu.addButton("START", [this]() {
+    mainMenu.addButton("START GAME", [this]() {
         std::cout << "🎮 Запуск игры!" << std::endl;
         changeState(GameState::PLAYING);
-    }, sf::Vector2f(500, 300));
+    }, sf::Vector2f(450, 300));
+    
+    mainMenu.addButton("LEVEL SELECT", [this]() {
+        std::cout << "🗂️ Выбор уровня" << std::endl;
+        // TODO: Реализовать позже
+    }, sf::Vector2f(450, 380));
     
     mainMenu.addButton("OPTIONS", [this]() {
-        std::cout << "⚙️ Открыть настройки" << std::endl;
+        std::cout << "⚙️ Настройки" << std::endl;
         // TODO: Реализовать позже
-    }, sf::Vector2f(500, 370));
+    }, sf::Vector2f(450, 460));
     
-    mainMenu.addButton("EXIT", [this]() {
+    mainMenu.addButton("EXIT GAME", [this]() {
         std::cout << "🚪 Выход из игры" << std::endl;
         changeState(GameState::EXIT);
-    }, sf::Vector2f(500, 440));
+    }, sf::Vector2f(450, 540));
     
     // Настройка меню паузы
-    pauseMenu.setTitle("PAUSED");
+    pauseMenu.setTitle("GAME PAUSED");
     pauseMenu.clearButtons();
-    pauseMenu.addButton("RESUME", [this]() {
+    pauseMenu.addButton("RESUME GAME", [this]() {
         std::cout << "▶️ Продолжить игру" << std::endl;
         changeState(GameState::PLAYING);
-    }, sf::Vector2f(500, 300));
+    }, sf::Vector2f(450, 300));
     
-    pauseMenu.addButton("RESTART", [this]() {
+    pauseMenu.addButton("RESTART LEVEL", [this]() {
         std::cout << "🔄 Перезапуск уровня" << std::endl;
-        currentLevel = Level(); // Создаем новый уровень
+        currentLevel = Level();
         changeState(GameState::PLAYING);
-    }, sf::Vector2f(500, 370));
+    }, sf::Vector2f(450, 380));
     
     pauseMenu.addButton("MAIN MENU", [this]() {
         std::cout << "🏠 В главное меню" << std::endl;
         changeState(GameState::MAIN_MENU);
-    }, sf::Vector2f(500, 440));
+    }, sf::Vector2f(450, 460));
     
-    pauseMenu.addButton("EXIT", [this]() {
+    pauseMenu.addButton("EXIT GAME", [this]() {
         std::cout << "🚪 Выход из игры" << std::endl;
         changeState(GameState::EXIT);
-    }, sf::Vector2f(500, 510));
+    }, sf::Vector2f(450, 540));
 }
 
 void Game::handleGameEvents(const sf::Event& event) {
