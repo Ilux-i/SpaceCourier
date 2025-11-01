@@ -37,6 +37,7 @@ add_executable(SpaceCourier
     src/DeliveryPoint.cpp
     src/Game.cpp
     src/Menu.cpp 
+    src/PackageIndicator.cpp
 )
 
 # Заголовочные файлы

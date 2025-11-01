@@ -11,6 +11,9 @@ Player::Player() : onGround(false), jumpForce(500.f), moveSpeed(300.f), gravity(
 void Player::update(float deltaTime) {
     healthSystem.update(deltaTime);
     
+    // ОБНОВЛЯЕМ ИНДИКАТОР ПОСЫЛКИ
+    packageIndicator.update(deltaTime);
+    
     // Обновляем позицию посылки если несём её
     if (carriedPackage && !carriedPackage->isDelivered()) {
         // Позиция посылки над головой игрока
@@ -43,6 +46,9 @@ void Player::draw(sf::RenderWindow& window) const {
     }
     
     healthSystem.draw(window);  // Рисуем здоровье
+    
+    // РИСУЕМ ИНДИКАТОР ПОСЫЛКИ
+    packageIndicator.draw(window);
 }
 
 sf::FloatRect Player::getBounds() const {
@@ -96,6 +102,9 @@ void Player::pickUpPackage(Package* package) {
         carriedPackage = package;
         carriedPackage->setCarried(true);
         
+        // ВКЛЮЧАЕМ ИНДИКАТОР ПОСЫЛКИ
+        packageIndicator.setVisible(true);
+        
         // Замедление скорости на 20% при ношении посылки
         moveSpeed = baseMoveSpeed * 0.8f;
         
@@ -115,6 +124,9 @@ void Player::deliverPackage() {
         carriedPackage->setDelivered(true);
         carriedPackage->setCarried(false);
         carriedPackage = nullptr;
+        
+        // ВЫКЛЮЧАЕМ ИНДИКАТОР ПОСЫЛКИ
+        packageIndicator.setVisible(false);
         
         // Восстанавливаем нормальную скорость
         moveSpeed = baseMoveSpeed;

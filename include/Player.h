@@ -3,6 +3,7 @@
 #include "HealthSystem.h"
 #include "Package.h" // ДОБАВЛЯЕМ
 #include <SFML/Graphics.hpp>
+#include "PackageIndicator.h"
 
 class Player : public Entity {
 public:
@@ -41,4 +42,5 @@ private:
     // ПОСЫЛКА
     Package* carriedPackage;
     float baseMoveSpeed; // Базовая скорость без посылки
+    PackageIndicator packageIndicator;
 };
