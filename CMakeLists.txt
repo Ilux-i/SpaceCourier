@@ -39,6 +39,7 @@ add_executable(SpaceCourier
     src/Menu.cpp 
     src/PackageIndicator.cpp
     src/AcidPool.cpp
+    src/MovingPlatform.cpp
 )
 
 # Заголовочные файлы

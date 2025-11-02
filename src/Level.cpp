@@ -10,6 +10,18 @@ Level::Level() {
 
 void Level::update(float deltaTime) {
     if (player.getHealthSystem().isAlive()) {
+        // ОБНОВЛЯЕМ ДВИЖУЩИЕСЯ ПЛАТФОРМЫ ПЕРВЫМИ
+        for (auto& movingPlatform : movingPlatforms) {
+            movingPlatform->update(deltaTime);
+        }
+        
+        // ЕСЛИ ИГРОК НА ПЛАТФОРМЕ - ПЕРЕНОСИМ ЕГО
+        if (playerOnMovingPlatform) {
+            sf::Vector2f platformMovement = playerOnMovingPlatform->getMovement();
+            // УМНОЖАЕМ НА deltaTime ДЛЯ ПЛАВНОГО ДВИЖЕНИЯ
+            player.setPosition(player.getPosition() + platformMovement * deltaTime);
+        }
+        
         player.update(deltaTime);
         
         for (auto& enemy : enemies) {
@@ -20,13 +32,12 @@ void Level::update(float deltaTime) {
             deliveryPoint->update(deltaTime);
         }
         
-        // ОБНОВЛЯЕМ КИСЛОТНЫЕ ОЗЁРА
         for (auto& acidPool : acidPools) {
             acidPool->update(deltaTime);
         }
         
         handleCollisions();
-        handlePlayerAcidCollisions(); // ДОБАВЛЯЕМ ОБРАБОТКУ КИСЛОТЫ
+        handlePlayerAcidCollisions();
     } else {
         std::cout << "💀 Игрок умер! Запускаем респавн уровня..." << std::endl;
         respawnLevel();
@@ -37,6 +48,11 @@ void Level::draw(sf::RenderWindow& window) const {
     // СНАЧАЛА рисуем платформы (самый нижний слой)
     for (const auto& platform : platforms) {
         platform->draw(window);
+    }
+    
+    // ЗАТЕМ рисуем движущиеся платформы
+    for (const auto& movingPlatform : movingPlatforms) {
+        movingPlatform->draw(window);
     }
     
     // ЗАТЕМ рисуем кислотные озёра (над платформами)
@@ -65,17 +81,35 @@ void Level::draw(sf::RenderWindow& window) const {
 
 void Level::handleCollisions() {
     player.setOnGround(false);
+    bool onMovingPlatform = false;
     
-    // Коллизии с платформами
+    // Коллизии с обычными платформами
     for (const auto& platform : platforms) {
         if (player.getBounds().findIntersection(platform->getBounds()).has_value()) {
             handlePlayerPlatformCollision(*platform);
         }
     }
     
+    // Коллизии с движущимися платформами
+    for (const auto& movingPlatform : movingPlatforms) {
+        if (player.getBounds().findIntersection(movingPlatform->getBounds()).has_value()) {
+            handlePlayerMovingPlatformCollision(*movingPlatform);
+            onMovingPlatform = true;
+        }
+    }
+    
+    // ЕСЛИ ИГРОК УШЁЛ С ПЛАТФОРМЫ - СБРАСЫВАЕМ
+    if (!onMovingPlatform && playerOnMovingPlatform) {
+        // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: игрок действительно ушёл с платформы
+        if (!player.getBounds().findIntersection(playerOnMovingPlatform->getBounds()).has_value()) {
+            playerOnMovingPlatform = nullptr;
+            std::cout << "🚶 Игрок сошёл с движущейся платформы" << std::endl;
+        }
+    }
+    
     handlePlayerEnemyCollisions();
     
-    // Границы уровня
+    // Границы уровня (остаётся без изменений)
     sf::Vector2f playerPos = player.getPosition();
     sf::FloatRect playerBounds = player.getBounds();
     
@@ -99,9 +133,6 @@ void Level::handleCollisions() {
     if (playerPos.y > levelPos.y + levelSize.y) {
         std::cout << "💀 Игрок упал в пропасть!" << std::endl;
         player.takeDamage();
-        
-        // ВСЕГДА ВЫЗЫВАЕМ ПОЛНЫЙ РЕСПАВН УРОВНЯ ПРИ ПАДЕНИИ В ПРОПАСТЬ
-        std::cout << "🔄 Запуск полного респавна уровня..." << std::endl;
         respawnLevel();
     }
 }
@@ -153,6 +184,62 @@ void Level::handlePlayerPlatformCollision(const Platform& platform) {
         }
     }
 }
+
+// МЕТОД ДЛЯ КОЛЛИЗИЙ С ДВИЖУЩИМИСЯ ПЛАТФОРМАМИ
+void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) {
+    sf::FloatRect playerBounds = player.getBounds();
+    sf::FloatRect platformBounds = platform.getBounds();
+    
+    auto intersection = playerBounds.findIntersection(platformBounds);
+    if (!intersection.has_value()) return;
+    
+    sf::FloatRect overlap = intersection.value();
+    
+    // Определяем направление коллизии
+    if (overlap.size.x < overlap.size.y) {
+        // Горизонтальная коллизия
+        if (playerBounds.position.x < platformBounds.position.x) {
+            player.setPosition(sf::Vector2f(
+                platformBounds.position.x - playerBounds.size.x,
+                player.getPosition().y
+            ));
+        } else {
+            player.setPosition(sf::Vector2f(
+                platformBounds.position.x + platformBounds.size.x,
+                player.getPosition().y
+            ));
+        }
+        player.setVelocity(sf::Vector2f(0.f, player.getVelocity().y));
+        playerOnMovingPlatform = nullptr; // СБРАСЫВАЕМ ЕСЛИ СБОКУ
+    } else {
+        // Вертикальная коллизия
+        if (playerBounds.position.y < platformBounds.position.y) {
+            // Игрок над платформой (приземление)
+            player.setPosition(sf::Vector2f(
+                player.getPosition().x,
+                platformBounds.position.y - playerBounds.size.y
+            ));
+            player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+            player.setOnGround(true);
+            
+            // ЗАПОМИНАЕМ ПЛАТФОРМУ ТОЛЬКО ЕСЛИ ИГРОК ДЕЙСТВИТЕЛЬНО СТОИТ СВЕРХУ
+            if (player.getVelocity().y >= 0) { // Игрок падает или стоит
+                playerOnMovingPlatform = &platform;
+                std::cout << "🎯 Игрок встал на движущуюся платформу!" << std::endl;
+            }
+            
+        } else {
+            // Игрок под платформой (удар головой)
+            player.setPosition(sf::Vector2f(
+                player.getPosition().x,
+                platformBounds.position.y + platformBounds.size.y
+            ));
+            player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+            playerOnMovingPlatform = nullptr;
+        }
+    }
+}
+
 
 // НОВЫЙ МЕТОД ДЛЯ ОБРАБОТКИ КИСЛОТЫ
 void Level::handlePlayerAcidCollisions() {
@@ -287,6 +374,7 @@ void Level::createFirstLocation() {
     packages.clear();
     deliveryPoints.clear();
     acidPools.clear();
+    movingPlatforms.clear();
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -317,6 +405,23 @@ void Level::createFirstLocation() {
         sf::Vector2f(20.f, 200.f),
         sf::Vector2f(900.f, 500.f),
         sf::Color(100, 100, 150, 255)
+    ));
+
+    movingPlatforms.push_back(std::make_unique<MovingPlatform>(
+        sf::Vector2f(150.f, 20.f),
+        sf::Vector2f(200.f, 600.f),  // Начальная позиция
+        sf::Vector2f(400.f, 600.f),  // Конечная позиция  
+        100.f,                       // Скорость
+        true                         // Горизонтальное движение
+    ));
+    
+    // Вертикальная движущаяся платформа
+    movingPlatforms.push_back(std::make_unique<MovingPlatform>(
+        sf::Vector2f(100.f, 20.f),
+        sf::Vector2f(600.f, 500.f),  // Начальная позиция
+        sf::Vector2f(600.f, 300.f),  // Конечная позиция
+        80.f,                        // Скорость
+        false                        // Вертикальное движение
     ));
     
     // КИСЛОТНЫЕ ОЗЁРА НА ПЛАТФОРМАХ

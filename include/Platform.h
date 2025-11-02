@@ -8,8 +8,8 @@ public:
     
     void update(float deltaTime) override;
     void draw(sf::RenderWindow& window) const override;
-    sf::FloatRect getBounds() const override;  // Убрал override
+    sf::FloatRect getBounds() const override;
     
-private:
+protected:
     sf::RectangleShape shape;
 };
