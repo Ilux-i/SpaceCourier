@@ -9,52 +9,57 @@ Level::Level() {
 }
 
 void Level::update(float deltaTime) {
-    // Проверяем жив ли игрок перед обновлением
     if (player.getHealthSystem().isAlive()) {
         player.update(deltaTime);
         
-        // Обновляем врагов
         for (auto& enemy : enemies) {
             enemy->update(deltaTime);
         }
         
-        // Обновляем точки доставки
         for (auto& deliveryPoint : deliveryPoints) {
             deliveryPoint->update(deltaTime);
         }
         
+        // ОБНОВЛЯЕМ КИСЛОТНЫЕ ОЗЁРА
+        for (auto& acidPool : acidPools) {
+            acidPool->update(deltaTime);
+        }
+        
         handleCollisions();
-        // УБРАЛИ ВЫЗОВЫ handlePackageInteractions и handleDeliveryInteractions
-        // Теперь взаимодействие ТОЛЬКО через handleEInteraction() по нажатию E
+        handlePlayerAcidCollisions(); // ДОБАВЛЯЕМ ОБРАБОТКУ КИСЛОТЫ
     } else {
-        // Игрок мертв - респавним уровень
         std::cout << "💀 Игрок умер! Запускаем респавн уровня..." << std::endl;
         respawnLevel();
     }
 }
 
 void Level::draw(sf::RenderWindow& window) const {
-    // Рисуем платформы
+    // СНАЧАЛА рисуем платформы (самый нижний слой)
     for (const auto& platform : platforms) {
         platform->draw(window);
     }
     
-    // Рисуем точки доставки
+    // ЗАТЕМ рисуем кислотные озёра (над платформами)
+    for (const auto& acidPool : acidPools) {
+        acidPool->draw(window);
+    }
+    
+    // ЗАТЕМ точки доставки
     for (const auto& deliveryPoint : deliveryPoints) {
         deliveryPoint->draw(window);
     }
     
-    // Рисуем посылки
+    // ЗАТЕМ посылки
     for (const auto& package : packages) {
         package->draw(window);
     }
     
-    // Рисуем врагов
+    // ЗАТЕМ врагов
     for (const auto& enemy : enemies) {
         enemy->draw(window);
     }
     
-    // Рисуем игрока
+    // ПОСЛЕДНИМ рисуем игрока (поверх всего)
     player.draw(window);
 }
 
@@ -145,6 +150,27 @@ void Level::handlePlayerPlatformCollision(const Platform& platform) {
                 platformBounds.position.y + platformBounds.size.y
             ));
             player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
+        }
+    }
+}
+
+// НОВЫЙ МЕТОД ДЛЯ ОБРАБОТКИ КИСЛОТЫ
+void Level::handlePlayerAcidCollisions() {
+    for (auto& acidPool : acidPools) {
+        bool isColliding = player.getBounds().findIntersection(acidPool->getBounds()).has_value();
+        
+        if (isColliding) {
+            acidPool->setPlayerInAcid(true);
+            
+            // Проверяем кулдаун урона (раз в секунду)
+            if (acidPool->getDamageCooldown() <= 0.f) {
+                player.takeDamage();
+                acidPool->resetDamageCooldown();
+                std::cout << "☠️ Игрок в кислоте! Здоровье: " 
+                          << player.getHealthSystem().getHealth() << "/3" << std::endl;
+            }
+        } else {
+            acidPool->setPlayerInAcid(false);
         }
     }
 }
@@ -254,12 +280,13 @@ void Level::respawnPlayer() {
 }
 
 void Level::createFirstLocation() {
-    std::cout << "🗺️ Создаем первую локацию с посылками..." << std::endl;
+    std::cout << "🗺️ Создаем первую локацию с кислотными озёрами..." << std::endl;
     
     platforms.clear();
     enemies.clear();
     packages.clear();
     deliveryPoints.clear();
+    acidPools.clear();
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -292,6 +319,25 @@ void Level::createFirstLocation() {
         sf::Color(100, 100, 150, 255)
     ));
     
+    // КИСЛОТНЫЕ ОЗЁРА НА ПЛАТФОРМАХ
+    // Озеро на первой платформе (y = 700 - высота озера)
+    acidPools.push_back(std::make_unique<AcidPool>(
+        sf::Vector2f(200.f, 15.f), // Тонкое озеро на платформе
+        sf::Vector2f(150.f, 685.f) // На 15px выше чем платформа (700 - 15 = 685)
+    ));
+    
+    // Озеро на второй платформе (y = 500 - высота озера)
+    acidPools.push_back(std::make_unique<AcidPool>(
+        sf::Vector2f(150.f, 15.f),
+        sf::Vector2f(120.f, 485.f) // На 15px выше чем платформа (500 - 15 = 485)
+    ));
+    
+    // Озеро на третьей платформе (y = 400 - высота озера)
+    acidPools.push_back(std::make_unique<AcidPool>(
+        sf::Vector2f(120.f, 15.f),
+        sf::Vector2f(410.f, 385.f) // На 15px выше чем платформа (400 - 15 = 385)
+    ));
+    
     // Враги
     enemies.push_back(std::make_unique<Enemy>(
         sf::Vector2f(200.f, 450.f),
@@ -306,13 +352,13 @@ void Level::createFirstLocation() {
     packageStartPositions.clear();
     deliveryPointStartPositions.clear();
     
-    // ПОСЫЛКА НА САМОЙ ВЕРХНЕЙ ПЛАТФОРМЕ
+    // Посылка
     packages.push_back(std::make_unique<Package>(
         sf::Vector2f(750.f, 250.f)
     ));
     packageStartPositions.push_back(sf::Vector2f(750.f, 250.f));
     
-    // ТОЧКА ДОСТАВКИ ЗА СТЕНКОЙ
+    // Точка доставки
     deliveryPoints.push_back(std::make_unique<DeliveryPoint>(
         sf::Vector2f(950.f, 650.f)
     ));
@@ -322,7 +368,8 @@ void Level::createFirstLocation() {
     
     std::cout << "✅ Добавлено: " << enemies.size() << " врагов, " 
               << packages.size() << " посылка, " 
-              << deliveryPoints.size() << " точка доставки" << std::endl;
+              << deliveryPoints.size() << " точка доставки, "
+              << acidPools.size() << " кислотных озёр" << std::endl;
 }
 
 Player& Level::getPlayer() {

@@ -4,6 +4,7 @@
 #include "Enemy.h"
 #include "Package.h"
 #include "DeliveryPoint.h"
+#include "AcidPool.h" // ДОБАВЛЯЕМ
 #include <vector>
 #include <memory>
 
@@ -19,7 +20,6 @@ public:
     
     Player& getPlayer();
     
-    // ЕДИНСТВЕННЫЙ МЕТОД ДЛЯ ВЗАИМОДЕЙСТВИЯ С E
     void handleEInteraction();
     
 private:
@@ -28,15 +28,16 @@ private:
     std::vector<std::unique_ptr<Enemy>> enemies;
     std::vector<std::unique_ptr<Package>> packages;
     std::vector<std::unique_ptr<DeliveryPoint>> deliveryPoints;
+    std::vector<std::unique_ptr<AcidPool>> acidPools; // ДОБАВЛЯЕМ ПОЛЕ
     
     sf::FloatRect levelBounds;
     
-    // НАЧАЛЬНЫЕ ПОЗИЦИИ ДЛЯ РЕСПАВНА
     std::vector<sf::Vector2f> packageStartPositions;
     std::vector<sf::Vector2f> deliveryPointStartPositions;
     
     void handlePlayerEnemyCollisions();
     void handlePlayerPlatformCollision(const Platform& platform);
+    void handlePlayerAcidCollisions(); // ДОБАВЛЯЕМ НОВЫЙ МЕТОД
     void respawnLevel();
     void respawnPlayer();
 };

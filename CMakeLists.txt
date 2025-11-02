@@ -38,6 +38,7 @@ add_executable(SpaceCourier
     src/Game.cpp
     src/Menu.cpp 
     src/PackageIndicator.cpp
+    src/AcidPool.cpp
 )
 
 # Заголовочные файлы
