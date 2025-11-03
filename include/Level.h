@@ -6,6 +6,7 @@
 #include "Package.h"
 #include "DeliveryPoint.h"
 #include "AcidPool.h"
+#include "HealthKit.h" 
 #include <vector>
 #include <memory>
 
@@ -31,6 +32,7 @@ private:
     std::vector<std::unique_ptr<Package>> packages;
     std::vector<std::unique_ptr<DeliveryPoint>> deliveryPoints;
     std::vector<std::unique_ptr<AcidPool>> acidPools;
+    std::vector<std::unique_ptr<HealthKit>> healthKits;
     
     sf::FloatRect levelBounds;
 
@@ -43,6 +45,7 @@ private:
     void handlePlayerPlatformCollision(const Platform& platform);
     void handlePlayerMovingPlatformCollision(const MovingPlatform& platform);
     void handlePlayerAcidCollisions();
+    void handlePlayerHealthKitCollisions();
     void respawnLevel();
     void respawnPlayer();
 };

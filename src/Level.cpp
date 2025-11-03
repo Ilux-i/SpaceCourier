@@ -18,7 +18,6 @@ void Level::update(float deltaTime) {
         // ЕСЛИ ИГРОК НА ПЛАТФОРМЕ - ПЕРЕНОСИМ ЕГО
         if (playerOnMovingPlatform) {
             sf::Vector2f platformMovement = playerOnMovingPlatform->getMovement();
-            // УМНОЖАЕМ НА deltaTime ДЛЯ ПЛАВНОГО ДВИЖЕНИЯ
             player.setPosition(player.getPosition() + platformMovement * deltaTime);
         }
         
@@ -36,8 +35,14 @@ void Level::update(float deltaTime) {
             acidPool->update(deltaTime);
         }
         
+        // ОБНОВЛЯЕМ АПТЕЧКИ
+        for (auto& healthKit : healthKits) {
+            healthKit->update(deltaTime);
+        }
+        
         handleCollisions();
         handlePlayerAcidCollisions();
+        handlePlayerHealthKitCollisions(); // ДОБАВЛЯЕМ ОБРАБОТКУ АПТЕЧЕК
     } else {
         std::cout << "💀 Игрок умер! Запускаем респавн уровня..." << std::endl;
         respawnLevel();
@@ -55,22 +60,27 @@ void Level::draw(sf::RenderWindow& window) const {
         movingPlatform->draw(window);
     }
     
-    // ЗАТЕМ рисуем кислотные озёра (над платформами)
+    // ЗАТЕМ рисуем кислотные озёра
     for (const auto& acidPool : acidPools) {
         acidPool->draw(window);
     }
     
-    // ЗАТЕМ точки доставки
+    // ЗАТЕМ рисуем точки доставки
     for (const auto& deliveryPoint : deliveryPoints) {
         deliveryPoint->draw(window);
     }
     
-    // ЗАТЕМ посылки
+    // ЗАТЕМ рисуем аптечки
+    for (const auto& healthKit : healthKits) {
+        healthKit->draw(window);
+    }
+    
+    // ЗАТЕМ рисуем посылки
     for (const auto& package : packages) {
         package->draw(window);
     }
     
-    // ЗАТЕМ врагов
+    // ЗАТЕМ рисуем врагов
     for (const auto& enemy : enemies) {
         enemy->draw(window);
     }
@@ -329,27 +339,23 @@ void Level::respawnLevel() {
     // СБРАСЫВАЕМ ЗДОРОВЬЕ ИГРОКА
     player.getHealthSystem().reset();
     
+    // ВОССТАНАВЛИВАЕМ ВСЕ АПТЕЧКИ
+    for (auto& healthKit : healthKits) {
+        healthKit->respawn();
+    }
+    
     // РЕСПАВНИМ ИГРОКА
     respawnPlayer();
     
-    // ВОССТАНАВЛИВАЕМ ПОСЫЛКИ НА НАЧАЛЬНЫЕ ПОЗИЦИИ
+    // ВОССТАНАВЛИВАЕМ ПОСЫЛКИ
     for (size_t i = 0; i < packages.size() && i < packageStartPositions.size(); ++i) {
         packages[i]->setCarried(false);
         packages[i]->setDelivered(false);
-        
-        // ЯВНО УСТАНАВЛИВАЕМ ПОЗИЦИЮ И ОБНОВЛЯЕМ
-        sf::Vector2f startPos = packageStartPositions[i];
-        packages[i]->setPosition(startPos);
-        
-        // ВЫЗЫВАЕМ update ДЛЯ ПРИМЕНЕНИЯ ИЗМЕНЕНИЙ
+        packages[i]->setPosition(packageStartPositions[i]);
         packages[i]->update(0.f);
-        
-        std::cout << "📦 Посылка " << i << " возвращена в позицию: (" 
-                  << startPos.x << ", " << startPos.y << ")" << std::endl;
     }
     
-    std::cout << "✅ Уровень перезапущен! Здоровье: " 
-              << player.getHealthSystem().getHealth() << "/3" << std::endl;
+    std::cout << "✅ Уровень перезапущен!" << std::endl;
 }
 
 void Level::respawnPlayer() {
@@ -366,6 +372,21 @@ void Level::respawnPlayer() {
     std::cout << "👤 Игрок респавнут на стартовой позиции" << std::endl;
 }
 
+void Level::handlePlayerHealthKitCollisions() {
+    for (auto& healthKit : healthKits) {
+        if (!healthKit->isCollected() && 
+            player.getBounds().findIntersection(healthKit->getBounds()).has_value()) {
+            
+            // Автоматический подбор и лечение
+            healthKit->collect();
+            player.getHealthSystem().heal();
+            
+            std::cout << "❤️ Игрок подобрал аптечку! Здоровье: " 
+                      << player.getHealthSystem().getHealth() << "/3" << std::endl;
+        }
+    }
+}
+
 void Level::createFirstLocation() {
     std::cout << "🗺️ Создаем первую локацию с кислотными озёрами..." << std::endl;
     
@@ -375,6 +396,7 @@ void Level::createFirstLocation() {
     deliveryPoints.clear();
     acidPools.clear();
     movingPlatforms.clear();
+    healthKits.clear();
     
     // Платформы
     platforms.push_back(std::make_unique<Platform>(
@@ -475,6 +497,19 @@ void Level::createFirstLocation() {
               << packages.size() << " посылка, " 
               << deliveryPoints.size() << " точка доставки, "
               << acidPools.size() << " кислотных озёр" << std::endl;
+
+    // АПТЕЧКИ
+    healthKits.push_back(std::make_unique<HealthKit>(
+        sf::Vector2f(200.f, 450.f) // На первой платформе
+    ));
+    
+    healthKits.push_back(std::make_unique<HealthKit>(
+        sf::Vector2f(750.f, 200.f) // На верхней платформе
+    ));
+    
+    healthKits.push_back(std::make_unique<HealthKit>(
+        sf::Vector2f(950.f, 600.f) // Рядом с точкой доставки
+    ));
 }
 
 Player& Level::getPlayer() {
