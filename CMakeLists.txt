@@ -41,6 +41,7 @@ add_executable(SpaceCourier
     src/AcidPool.cpp
     src/MovingPlatform.cpp
     src/HealthKit.cpp
+    src/LevelManager.cpp
 )
 
 # Заголовочные файлы

@@ -6,23 +6,24 @@
 #include "Package.h"
 #include "DeliveryPoint.h"
 #include "AcidPool.h"
-#include "HealthKit.h" 
+#include "HealthKit.h"
 #include <vector>
 #include <memory>
 
 class Level {
 public:
     Level();
+    Level(int levelNumber);
     
     void update(float deltaTime);
     void draw(sf::RenderWindow& window) const;
     
     void handleCollisions();
-    void createFirstLocation();
     
     Player& getPlayer();
     
     void handleEInteraction();
+    bool isLevelComplete() const;
     
 private:
     Player player;
@@ -35,11 +36,14 @@ private:
     std::vector<std::unique_ptr<HealthKit>> healthKits;
     
     sf::FloatRect levelBounds;
-
-    const MovingPlatform* playerOnMovingPlatform; 
+    int currentLevelNumber;
+    bool levelCompleted;
     
     std::vector<sf::Vector2f> packageStartPositions;
     std::vector<sf::Vector2f> deliveryPointStartPositions;
+    
+    // УБИРАЕМ playerOnMovingPlatform - используем локальную переменную в методах
+    const MovingPlatform* playerOnMovingPlatform; // ДОБАВЛЯЕМ ОБРАТНО
     
     void handlePlayerEnemyCollisions();
     void handlePlayerPlatformCollision(const Platform& platform);
@@ -48,4 +52,10 @@ private:
     void handlePlayerHealthKitCollisions();
     void respawnLevel();
     void respawnPlayer();
+    
+    void createLevel1();
+    void createLevel2();
+    void createLevel3();
+    void createLevel4();
+    void createLevel5();
 };

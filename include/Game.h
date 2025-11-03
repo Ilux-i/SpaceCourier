@@ -1,7 +1,7 @@
 #pragma once
 #include "GameState.h"
 #include "Menu.h"
-#include "Level.h"
+#include "LevelManager.h" // ДОБАВЛЯЕМ
 #include <SFML/Graphics.hpp>
 
 class Game {
@@ -17,7 +17,8 @@ private:
     
     Menu mainMenu;
     Menu pauseMenu;
-    Level currentLevel;
+    Menu levelSelectMenu; // ДОБАВЛЯЕМ МЕНЮ ВЫБОРА УРОВНЯ
+    LevelManager levelManager; // ЗАМЕНЯЕМ Level НА LevelManager
     
     void processEvents();
     void update(float deltaTime);
@@ -25,7 +26,9 @@ private:
     
     void changeState(GameState newState);
     void setupMenus();
+    void setupLevelSelectMenu(); // ДОБАВЛЯЕМ НОВЫЙ МЕТОД
 
     void handleGameEvents(const sf::Event& event);
     void handleContinuousInput(); 
+    void checkLevelCompletion(); // ДОБАВЛЯЕМ ПРОВЕРКУ ЗАВЕРШЕНИЯ УРОВНЯ
 };

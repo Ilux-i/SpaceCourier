@@ -8,6 +8,7 @@ Game::Game()
 {
     window.setFramerateLimit(60);
     setupMenus();
+    setupLevelSelectMenu();
 }
 
 void Game::run() {
@@ -44,6 +45,8 @@ void Game::processEvents() {
                 handleGameEvents(*event);
                 break;
             case GameState::LEVEL_SELECT:
+                levelSelectMenu.handleEvent(*event, window);
+                break;
             case GameState::OPTIONS:
                 // TODO: Реализовать позже
                 break;
@@ -65,9 +68,12 @@ void Game::update(float deltaTime) {
         case GameState::PLAYING:
             // ОБРАБАТЫВАЕМ НЕПРЕРЫВНЫЙ ВВОД ДЛЯ ДВИЖЕНИЯ
             handleContinuousInput();
-            currentLevel.update(deltaTime);
+            levelManager.getCurrentLevel().update(deltaTime); // ИСПРАВЛЕНО
+            checkLevelCompletion();
             break;
         case GameState::LEVEL_SELECT:
+            levelSelectMenu.update(deltaTime);
+            break;
         case GameState::OPTIONS:
         case GameState::EXIT:
             // TODO: Реализовать позже
@@ -83,13 +89,15 @@ void Game::render() {
             mainMenu.draw(window);
             break;
         case GameState::PAUSED:
-            currentLevel.draw(window); // Фон - текущий уровень
-            pauseMenu.draw(window);    // Поверх - меню паузы
+            levelManager.getCurrentLevel().draw(window); // ИСПРАВЛЕНО
+            pauseMenu.draw(window);
             break;
         case GameState::PLAYING:
-            currentLevel.draw(window);
+            levelManager.getCurrentLevel().draw(window); // ИСПРАВЛЕНО
             break;
         case GameState::LEVEL_SELECT:
+            levelSelectMenu.draw(window);
+            break;
         case GameState::OPTIONS:
         case GameState::EXIT:
             // TODO: Реализовать позже
@@ -112,12 +120,14 @@ void Game::setupMenus() {
     mainMenu.clearButtons();
     mainMenu.addButton("START GAME", [this]() {
         std::cout << "🎮 Запуск игры!" << std::endl;
+        levelManager.loadLevel(1);
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 300));
     
     mainMenu.addButton("LEVEL SELECT", [this]() {
         std::cout << "🗂️ Выбор уровня" << std::endl;
-        // TODO: Реализовать позже
+        setupLevelSelectMenu();
+        changeState(GameState::LEVEL_SELECT);
     }, sf::Vector2f(450, 380));
     
     mainMenu.addButton("OPTIONS", [this]() {
@@ -140,7 +150,8 @@ void Game::setupMenus() {
     
     pauseMenu.addButton("RESTART LEVEL", [this]() {
         std::cout << "🔄 Перезапуск уровня" << std::endl;
-        currentLevel = Level();
+        // ЗАГРУЖАЕМ ТЕКУЩИЙ УРОВЕНЬ ЗАНОВО
+        levelManager.loadLevel(levelManager.getCurrentLevelNumber());
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 380));
     
@@ -155,12 +166,37 @@ void Game::setupMenus() {
     }, sf::Vector2f(450, 540));
 }
 
+void Game::setupLevelSelectMenu() {
+    levelSelectMenu.setTitle("SELECT LEVEL");
+    levelSelectMenu.clearButtons();
+    
+    // Динамически создаём кнопки для доступных уровней
+    int unlockedLevels = levelManager.getUnlockedLevels();
+    for (int i = 1; i <= 5; ++i) {
+        if (i <= unlockedLevels) {
+            levelSelectMenu.addButton("LEVEL " + std::to_string(i), [this, i]() {
+                std::cout << "🎮 Выбран уровень " << i << std::endl;
+                levelManager.loadLevel(i);
+                changeState(GameState::PLAYING);
+            }, sf::Vector2f(450, 200 + i * 80));
+        } else {
+            levelSelectMenu.addButton("LOCKED", []() {
+                std::cout << "🔒 Уровень заблокирован!" << std::endl;
+            }, sf::Vector2f(450, 200 + i * 80));
+        }
+    }
+    
+    levelSelectMenu.addButton("BACK", [this]() {
+        changeState(GameState::MAIN_MENU);
+    }, sf::Vector2f(450, 600));
+}
+
 void Game::handleGameEvents(const sf::Event& event) {
     // Обработка клавиши E для взаимодействия с посылками
     if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->scancode == sf::Keyboard::Scancode::E) {
             std::cout << "🎮 Нажата E в игровом режиме" << std::endl;
-            currentLevel.handleEInteraction();
+            levelManager.getCurrentLevel().handleEInteraction(); // ИСПРАВЛЕНО
         }
         
         // Обработка Escape для паузы
@@ -200,10 +236,21 @@ void Game::handleContinuousInput() {
     }
     
     // Передаем движение игроку
-    currentLevel.getPlayer().move(movement);
+    levelManager.getCurrentLevel().getPlayer().move(movement); // ИСПРАВЛЕНО
     
     // Обработка прыжка
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space)) {
-        currentLevel.getPlayer().jump();
+        levelManager.getCurrentLevel().getPlayer().jump(); // ИСПРАВЛЕНО
+    }
+}
+
+void Game::checkLevelCompletion() {
+    // РЕАЛЬНАЯ ПРОВЕРКА ЗАВЕРШЕНИЯ УРОВНЯ
+    if (levelManager.getCurrentLevel().isLevelComplete()) {
+        levelManager.markLevelComplete();
+        std::cout << "🎉 Уровень " << levelManager.getCurrentLevelNumber() << " завершён!" << std::endl;
+        
+        // Переходим к выбору уровня
+        changeState(GameState::LEVEL_SELECT);
     }
 }
