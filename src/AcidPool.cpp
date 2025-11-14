@@ -1,50 +1,76 @@
 #include "AcidPool.h"
 #include <iostream>
-#include <cmath>
 
 AcidPool::AcidPool(const sf::Vector2f& size, const sf::Vector2f& position) 
-    : playerInAcid(false), damageCooldown(0.f) {
-    
+    : playerInAcid(false), damageCooldown(0.f), textureLoaded(false),
+      sprite(texture) // Инициализируем с текстурой
+{
+    // Базовый геометрический shape (fallback)
     shape.setSize(size);
     shape.setPosition(position);
     this->position = position;
     
-    createAcidEffect();
-}
-
-void AcidPool::createAcidEffect() {
-    // Очень яркий кислотный цвет
+    // Стиль для fallback
     shape.setFillColor(sf::Color(0, 255, 0, 200)); // Ярко-зелёный
     shape.setOutlineColor(sf::Color(255, 255, 0, 255)); // Жёлтая обводка
     shape.setOutlineThickness(2.f);
+    
+    // Загружаем текстуру
+    loadTexture();
+}
+
+void AcidPool::loadTexture() {
+    if (!texture.loadFromFile("assets/sprites/environment/acid.png")) {
+        std::cout << "❌ Не удалось загрузить текстуру кислоты, используем геометрическую форму" << std::endl;
+        textureLoaded = false;
+        return;
+    }
+    
+    textureLoaded = true;
+    
+    // Настраиваем спрайт - ПОДСТРАИВАЕМ ТЕКСТУРУ ПОД РАЗМЕРЫ ОБЪЕКТА
+    sf::Vector2f poolSize = shape.getSize();
+    
+    sprite.setTexture(texture);
+    sprite.setTextureRect(sf::IntRect(
+        sf::Vector2i(0, 0), 
+        sf::Vector2i(static_cast<int>(poolSize.x), static_cast<int>(poolSize.y))
+    ));
+    
+    // Устанавливаем повторение текстуры
+    texture.setRepeated(true);
+    
+    sprite.setPosition(position);
+    
+    std::cout << "✅ Текстура кислоты загружена успешно!" << std::endl;
 }
 
 void AcidPool::update(float deltaTime) {
+    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ МЕРЦАНИЯ
     if (playerInAcid) {
         damageCooldown -= deltaTime;
     }
     
-    // Интенсивная анимация мерцания
-    static float timer = 0.f;
-    timer += deltaTime;
-    
-    float alpha = 150 + 105 * std::sin(timer * 6.f); // Быстрое мерцание
-    shape.setFillColor(sf::Color(0, 255, 0, static_cast<uint8_t>(alpha)));
-    
-    // Яркая пульсирующая обводка когда игрок в кислоте
-    if (playerInAcid) {
-        float outlineAlpha = 150 + 105 * std::sin(timer * 8.f);
-        shape.setOutlineColor(sf::Color(255, 0, 0, static_cast<uint8_t>(outlineAlpha))); // Красная при контакте
+    // Обновляем позицию
+    if (textureLoaded) {
+        sprite.setPosition(position);
     } else {
-        shape.setOutlineColor(sf::Color(255, 255, 0, 255)); // Жёлтая в обычном состоянии
+        shape.setPosition(position);
     }
 }
 
 void AcidPool::draw(sf::RenderWindow& window) const {
-    window.draw(shape);
+    if (textureLoaded) {
+        window.draw(sprite);
+    } else {
+        window.draw(shape);
+    }
 }
 
 sf::FloatRect AcidPool::getBounds() const {
+    if (textureLoaded) {
+        return sf::FloatRect(position, sprite.getGlobalBounds().size);
+    }
     return shape.getGlobalBounds();
 }
 

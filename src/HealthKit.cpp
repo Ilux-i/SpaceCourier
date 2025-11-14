@@ -1,48 +1,66 @@
 #include "HealthKit.h"
 #include <iostream>
-#include <cmath>
 
 HealthKit::HealthKit(const sf::Vector2f& position) 
-    : collected(false), animationTimer(0.f) { // УБИРАЕМ respawnTimer
-    this->position = position;
-    createHealthKit();
-}
-
-void HealthKit::createHealthKit() {
+    : collected(false), textureLoaded(false),
+      sprite(texture) // Инициализируем с текстурой
+{
+    // Базовый геометрический shape (fallback)
     shape.setRadius(15.f);
     shape.setFillColor(sf::Color(255, 50, 50, 255));
     shape.setOutlineColor(sf::Color::White);
     shape.setOutlineThickness(2.f);
     shape.setPosition(position);
     shape.setPointCount(4); // Ромб вместо круга
+    
+    this->position = position;
+    
+    // Загружаем текстуру
+    loadTexture();
+}
+
+void HealthKit::loadTexture() {
+    if (!texture.loadFromFile("assets/sprites/objects/healthkit.png")) {
+        std::cout << "❌ Не удалось загрузить текстуру аптечки, используем геометрическую форму" << std::endl;
+        textureLoaded = false;
+        return;
+    }
+    
+    textureLoaded = true;
+    
+    // Настраиваем спрайт
+    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
+    sprite.setScale(sf::Vector2f(0.8f, 0.8f)); // Масштаб для соответствия размерам
+    sprite.setPosition(position);
+    
+    std::cout << "✅ Текстура аптечки загружена успешно!" << std::endl;
 }
 
 void HealthKit::update(float deltaTime) {
+    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ
     if (!collected) {
-        updateAnimation(deltaTime);
+        if (textureLoaded) {
+            sprite.setPosition(position);
+        } else {
+            shape.setPosition(position);
+        }
     }
-    // УБИРАЕМ ЛОГИКУ АВТОРЕСПАВНА ЧЕРЕЗ 10 СЕКУНД
-}
-
-void HealthKit::updateAnimation(float deltaTime) {
-    animationTimer += deltaTime;
-    
-    // Пульсация и подпрыгивание
-    float scale = 1.0f + 0.1f * std::sin(animationTimer * 5.f);
-    shape.setScale(sf::Vector2f(scale, scale));
-    
-    // Лёгкое подпрыгивание
-    float bounce = 2.f * std::sin(animationTimer * 3.f);
-    shape.setPosition(sf::Vector2f(position.x, position.y + bounce));
 }
 
 void HealthKit::draw(sf::RenderWindow& window) const {
     if (!collected) {
-        window.draw(shape);
+        if (textureLoaded) {
+            window.draw(sprite);
+        } else {
+            window.draw(shape);
+        }
     }
 }
 
 sf::FloatRect HealthKit::getBounds() const {
+    if (textureLoaded) {
+        return sf::FloatRect(position, sf::Vector2f(30.f, 30.f));
+    }
     return shape.getGlobalBounds();
 }
 
@@ -59,8 +77,10 @@ void HealthKit::collect() {
 
 void HealthKit::respawn() {
     collected = false;
-    animationTimer = 0.f;
-    shape.setScale(sf::Vector2f(1.f, 1.f));
-    shape.setPosition(position);
+    if (textureLoaded) {
+        sprite.setPosition(position);
+    } else {
+        shape.setPosition(position);
+    }
     std::cout << "🔄 Аптечка восстановилась!" << std::endl;
 }

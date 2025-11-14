@@ -66,9 +66,8 @@ void Game::update(float deltaTime) {
             pauseMenu.update(deltaTime);
             break;
         case GameState::PLAYING:
-            // ОБРАБАТЫВАЕМ НЕПРЕРЫВНЫЙ ВВОД ДЛЯ ДВИЖЕНИЯ
             handleContinuousInput();
-            levelManager.getCurrentLevel().update(deltaTime); // ИСПРАВЛЕНО
+            levelManager.getCurrentLevel().update(deltaTime);
             checkLevelCompletion();
             break;
         case GameState::LEVEL_SELECT:
@@ -76,31 +75,29 @@ void Game::update(float deltaTime) {
             break;
         case GameState::OPTIONS:
         case GameState::EXIT:
-            // TODO: Реализовать позже
             break;
     }
 }
 
 void Game::render() {
-    window.clear(sf::Color(30, 30, 60, 255));
+    window.clear(sf::Color(20, 20, 40));
     
     switch (currentState) {
         case GameState::MAIN_MENU:
             mainMenu.draw(window);
             break;
         case GameState::PAUSED:
-            levelManager.getCurrentLevel().draw(window); // ИСПРАВЛЕНО
+            levelManager.getCurrentLevel().draw(window);
             pauseMenu.draw(window);
             break;
         case GameState::PLAYING:
-            levelManager.getCurrentLevel().draw(window); // ИСПРАВЛЕНО
+            levelManager.getCurrentLevel().draw(window);
             break;
         case GameState::LEVEL_SELECT:
             levelSelectMenu.draw(window);
             break;
         case GameState::OPTIONS:
         case GameState::EXIT:
-            // TODO: Реализовать позже
             break;
     }
     

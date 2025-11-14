@@ -10,10 +10,15 @@ public:
     void draw(sf::RenderWindow& window) const;
     
 private:
-    sf::RectangleShape icon;
-    sf::RectangleShape background;
+    sf::RectangleShape icon; // Fallback
+    sf::RectangleShape background; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
+    
     bool isVisible;
     float pulseTimer;
     
+    void loadTexture();
     void createIcon();
 };

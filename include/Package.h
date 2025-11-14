@@ -17,7 +17,13 @@ public:
     void setPosition(const sf::Vector2f& newPosition);
     
 private:
-    sf::RectangleShape shape;
+    sf::RectangleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
+    
     bool carried;
     bool delivered;
+    
+    void loadTexture();
 };

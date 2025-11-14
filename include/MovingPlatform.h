@@ -15,12 +15,17 @@ public:
     sf::Vector2f getMovement() const;
     
 private:
-    sf::RectangleShape shape;
+    sf::RectangleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
+    
     sf::Vector2f startPosition;
     sf::Vector2f endPosition;
     sf::Vector2f currentTarget;
     float movementSpeed;
     bool isHorizontal;
     
+    void loadTexture();
     void updateMovement(float deltaTime);
 };

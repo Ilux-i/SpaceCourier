@@ -18,6 +18,7 @@ find_path(SFML_INCLUDE_DIR SFML/Graphics.hpp PATHS "${SFML_DIR}/include")
 find_library(SFML_GRAPHICS sfml-graphics PATHS "${SFML_DIR}/lib")
 find_library(SFML_WINDOW sfml-window PATHS "${SFML_DIR}/lib") 
 find_library(SFML_SYSTEM sfml-system PATHS "${SFML_DIR}/lib")
+find_library(SFML_AUDIO sfml-audio PATHS "${SFML_DIR}/lib")
 
 if(NOT SFML_INCLUDE_DIR OR NOT SFML_GRAPHICS OR NOT SFML_WINDOW OR NOT SFML_SYSTEM)
     message(FATAL_ERROR "SFML not found! Install with: brew install sfml")
@@ -48,7 +49,7 @@ add_executable(SpaceCourier
 target_include_directories(SpaceCourier PRIVATE include ${SFML_INCLUDE_DIR})
 
 # Линковка с SFML
-target_link_libraries(SpaceCourier ${SFML_GRAPHICS} ${SFML_WINDOW} ${SFML_SYSTEM})
+target_link_libraries(SpaceCourier ${SFML_GRAPHICS} ${SFML_WINDOW} ${SFML_SYSTEM} ${SFML_AUDIO})
 
 # Копирование SFML библиотек для macOS
 if(APPLE)

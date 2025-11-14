@@ -1,34 +1,62 @@
 #include "DeliveryPoint.h"
-#include <cmath>
-#include <cstdint> // ДОБАВЛЯЕМ ДЛЯ uint8_t
+#include <iostream>
 
-DeliveryPoint::DeliveryPoint(const sf::Vector2f& position) : active(true) {
+DeliveryPoint::DeliveryPoint(const sf::Vector2f& position) 
+    : active(true), textureLoaded(false),
+      sprite(texture) // Инициализируем с текстурой
+{
+    // Базовый геометрический shape (fallback)
     shape.setSize(sf::Vector2f(50.f, 50.f));
     shape.setFillColor(sf::Color(100, 255, 100, 150)); // Зелёный полупрозрачный
     shape.setPosition(position);
     this->position = position;
+    
+    // Загружаем текстуру
+    loadTexture();
+}
+
+void DeliveryPoint::loadTexture() {
+    if (!texture.loadFromFile("assets/sprites/objects/delivery_point.png")) {
+        std::cout << "❌ Не удалось загрузить текстуру точки доставки, используем геометрическую форму" << std::endl;
+        textureLoaded = false;
+        return;
+    }
+    
+    textureLoaded = true;
+    
+    // Настраиваем спрайт
+    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
+    sprite.setScale(sf::Vector2f(1.6f, 1.6f)); // Масштаб для соответствия размерам 50x50
+    sprite.setPosition(position);
+    
+    std::cout << "✅ Текстура точки доставки загружена успешно!" << std::endl;
 }
 
 void DeliveryPoint::update(float deltaTime) {
-    // Анимация мигания для привлечения внимания
-    static float timer = 0.f;
-    timer += deltaTime;
-    
-    if (timer > 1.f) timer = 0.f;
-    
+    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ МИГАНИЯ
     if (active) {
-        float alpha = 150 + 105 * std::sin(timer * 3.14f * 2.f);
-        shape.setFillColor(sf::Color(100, 255, 100, static_cast<uint8_t>(alpha)));
+        if (textureLoaded) {
+            sprite.setPosition(position);
+        } else {
+            shape.setPosition(position);
+        }
     }
 }
 
 void DeliveryPoint::draw(sf::RenderWindow& window) const {
     if (active) {
-        window.draw(shape);
+        if (textureLoaded) {
+            window.draw(sprite);
+        } else {
+            window.draw(shape);
+        }
     }
 }
 
 sf::FloatRect DeliveryPoint::getBounds() const {
+    if (textureLoaded) {
+        return sf::FloatRect(position, sf::Vector2f(50.f, 50.f));
+    }
     return shape.getGlobalBounds();
 }
 

@@ -16,9 +16,13 @@ public:
     void resetDamageCooldown();
     
 private:
-    sf::RectangleShape shape;
+    sf::RectangleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
+    
     bool playerInAcid;
     float damageCooldown;
     
-    void createAcidEffect();
+    void loadTexture();
 };

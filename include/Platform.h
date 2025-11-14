@@ -11,5 +11,10 @@ public:
     sf::FloatRect getBounds() const override;
     
 protected:
-    sf::RectangleShape shape;
+    sf::RectangleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
+    
+    void loadTexture();
 };

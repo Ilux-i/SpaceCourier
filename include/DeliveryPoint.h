@@ -13,6 +13,11 @@ public:
     bool isActive() const;
     
 private:
-    sf::RectangleShape shape;
+    sf::RectangleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
     bool active;
+    
+    void loadTexture();
 };

@@ -20,6 +20,10 @@ private:
     float invincibilityTimer;
     bool isInvincible;
     
+    sf::Texture heartTexture;
+    bool textureLoaded;
+    
+    void loadTexture();
     void createHearts();
-    std::vector<sf::CircleShape> hearts;
+    std::vector<sf::Sprite> hearts;
 };

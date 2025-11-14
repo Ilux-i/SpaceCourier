@@ -3,7 +3,7 @@
 
 Menu::Menu() : fontLoaded(false) {
     // Пытаемся загрузить шрифт
-    if (!font.openFromFile("assets/fonts/arial.ttf")) { // Исправлено: openFromFile
+    if (!font.openFromFile("assets/fonts/Planes_ValMore.ttf")) { // Исправлено: openFromFile
         std::cout << "❌ Не удалось загрузить шрифт из assets/fonts/arial.ttf" << std::endl;
         // Попробуем системные пути
         #ifdef __APPLE__

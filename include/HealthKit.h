@@ -15,10 +15,12 @@ public:
     void respawn();
     
 private:
-    sf::CircleShape shape;
-    bool collected;
-    float animationTimer;
+    sf::CircleShape shape; // Fallback
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool textureLoaded;
     
-    void createHealthKit();
-    void updateAnimation(float deltaTime);
+    bool collected;
+    
+    void loadTexture();
 };
