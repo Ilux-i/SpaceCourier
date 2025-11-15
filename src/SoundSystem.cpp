@@ -18,21 +18,15 @@ SoundSystem::~SoundSystem() {
 
 bool SoundSystem::initialize() {
     initialized = true;
-    std::cout << "✅ Звуковая система инициализирована (только музыка)" << std::endl;
     return true;
 }
 
-void SoundSystem::update(float deltaTime) {
-    // В SFML 3.0 музыка автоматически зацикливается если файл поддерживает loop
-    // Никакой дополнительной логики не нужно
-}
+void SoundSystem::update(float deltaTime) {}
 
 void SoundSystem::playMusic(MusicType musicType, bool loop) {
-    if (!initialized) return;
-    
     // Если уже играет эта музыка - ничего не делаем
     if (currentMusic == musicType && currentMusicPlayer && 
-        currentMusicPlayer->getStatus() == sf::Music::Status::Playing) {  // ИСПРАВЛЕНО
+        currentMusicPlayer->getStatus() == sf::Music::Status::Playing) {
         return;
     }
     
@@ -46,18 +40,15 @@ void SoundSystem::playMusic(MusicType musicType, bool loop) {
     std::string path = getMusicPath(musicType);
     
     if (!currentMusicPlayer->openFromFile(path)) {
-        std::cout << "❌ Не удалось загрузить музыку: " << path << std::endl;
         currentMusicPlayer.reset();
         currentMusic = MusicType::NONE;
         return;
     }
     
-    // В SFML 3.0 setLoop удалён, зацикливание зависит от аудиофайла
+    // Настраиваем музыку
     currentMusicPlayer->setVolume(musicVolume);
     currentMusicPlayer->play();
     currentMusic = musicType;
-    
-    std::cout << "🎵 Воспроизведение музыки: " << path << std::endl;
 }
 
 void SoundSystem::stopMusic() {
@@ -84,7 +75,6 @@ void SoundSystem::setMusicVolume(float volume) {
     if (currentMusicPlayer) {
         currentMusicPlayer->setVolume(musicVolume);
     }
-    std::cout << "🔊 Громкость музыки установлена: " << volume << "%" << std::endl;
 }
 
 std::string SoundSystem::getMusicPath(MusicType type) const {

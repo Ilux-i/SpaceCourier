@@ -8,8 +8,9 @@ Game::Game()
 {
     window.setFramerateLimit(60);
     
-    if (!soundSystem.initialize()) {
-        std::cout << "⚠️  Звуковая система не загружена, продолжаем без звука" << std::endl;
+    // Инициализируем звуковую систему
+    if (soundSystem.initialize()) {
+        soundSystem.playMusic(MusicType::MAIN_MENU);
     }
     
     setupMenus();
