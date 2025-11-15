@@ -2,6 +2,7 @@
 #include "GameState.h"
 #include "Menu.h"
 #include "LevelManager.h"
+#include "SoundSystem.h"
 #include <SFML/Graphics.hpp>
 
 class Game {
@@ -19,6 +20,7 @@ private:
     Menu pauseMenu;
     Menu levelSelectMenu;
     LevelManager levelManager;
+    SoundSystem soundSystem;
     
     void processEvents();
     void update(float deltaTime);

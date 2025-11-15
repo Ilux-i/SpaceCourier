@@ -43,6 +43,7 @@ add_executable(SpaceCourier
     src/MovingPlatform.cpp
     src/HealthKit.cpp
     src/LevelManager.cpp
+    src/SoundSystem.cpp
 )
 
 # Заголовочные файлы

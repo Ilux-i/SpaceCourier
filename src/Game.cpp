@@ -7,6 +7,11 @@ Game::Game()
     , previousState(GameState::MAIN_MENU)
 {
     window.setFramerateLimit(60);
+    
+    if (!soundSystem.initialize()) {
+        std::cout << "⚠️  Звуковая система не загружена, продолжаем без звука" << std::endl;
+    }
+    
     setupMenus();
     setupLevelSelectMenu();
 }
@@ -58,6 +63,8 @@ void Game::processEvents() {
 }
 
 void Game::update(float deltaTime) {
+    soundSystem.update(deltaTime);
+
     switch (currentState) {
         case GameState::MAIN_MENU:
             mainMenu.update(deltaTime);
@@ -107,6 +114,29 @@ void Game::render() {
 void Game::changeState(GameState newState) {
     previousState = currentState;
     currentState = newState;
+    
+    // Переключаем музыку в зависимости от состояния
+    switch (newState) {
+        case GameState::MAIN_MENU:
+            soundSystem.playMusic(MusicType::MAIN_MENU);
+            break;
+        case GameState::PLAYING:
+            {
+                int level = levelManager.getCurrentLevelNumber();
+                MusicType musicType = static_cast<MusicType>(static_cast<int>(MusicType::LEVEL_1) + level - 1);
+                soundSystem.playMusic(musicType);
+            }
+            break;
+        case GameState::LEVEL_SELECT:
+            soundSystem.playMusic(MusicType::MAIN_MENU);  // Или специальная музыка для выбора уровня
+            break;
+        case GameState::PAUSED:
+            soundSystem.pauseMusic();
+            break;
+        default:
+            break;
+    }
+    
     std::cout << "🔄 Смена состояния: " << static_cast<int>(previousState) 
               << " -> " << static_cast<int>(currentState) << std::endl;
 }
