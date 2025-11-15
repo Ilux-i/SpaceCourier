@@ -14,6 +14,7 @@ Game::Game()
     
     setupMenus();
     setupLevelSelectMenu();
+    setupOptionsMenu();
 }
 
 void Game::run() {
@@ -37,7 +38,6 @@ void Game::processEvents() {
             window.close();
         }
         
-        // Обработка событий в зависимости от состояния
         switch (currentState) {
             case GameState::MAIN_MENU:
                 mainMenu.handleEvent(*event, window);
@@ -46,14 +46,13 @@ void Game::processEvents() {
                 pauseMenu.handleEvent(*event, window);
                 break;
             case GameState::PLAYING:
-                // ПЕРЕДАЕМ СОБЫТИЯ В InputHandler ДЛЯ ИГРОВОГО ПРОЦЕССА
                 handleGameEvents(*event);
                 break;
             case GameState::LEVEL_SELECT:
                 levelSelectMenu.handleEvent(*event, window);
                 break;
             case GameState::OPTIONS:
-                // TODO: Реализовать позже
+                optionsMenu.handleEvent(*event, window);
                 break;
             case GameState::EXIT:
                 window.close();
@@ -81,6 +80,8 @@ void Game::update(float deltaTime) {
             levelSelectMenu.update(deltaTime);
             break;
         case GameState::OPTIONS:
+            optionsMenu.update(deltaTime);
+            break;
         case GameState::EXIT:
             break;
     }
@@ -104,6 +105,8 @@ void Game::render() {
             levelSelectMenu.draw(window);
             break;
         case GameState::OPTIONS:
+            optionsMenu.draw(window);
+            break;
         case GameState::EXIT:
             break;
     }
@@ -159,7 +162,7 @@ void Game::setupMenus() {
     
     mainMenu.addButton("OPTIONS", [this]() {
         std::cout << "⚙️ Настройки" << std::endl;
-        // TODO: Реализовать позже
+        changeState(GameState::OPTIONS);
     }, sf::Vector2f(450, 460));
     
     mainMenu.addButton("EXIT GAME", [this]() {
@@ -280,4 +283,19 @@ void Game::checkLevelCompletion() {
         // Переходим к выбору уровня
         changeState(GameState::LEVEL_SELECT);
     }
+}
+
+void Game::setupOptionsMenu() {
+    optionsMenu.setBackCallback([this]() {
+        std::cout << "🔙 Возврат из настроек" << std::endl;
+        changeState(previousState);
+    });
+    
+    optionsMenu.setVolumeCallback([this](float volume) {
+        std::cout << "🔊 Изменение громкости: " << volume << "%" << std::endl;
+        soundSystem.setMusicVolume(volume);
+    });
+    
+    // Устанавливаем текущую громкость
+    optionsMenu.setMusicVolume(soundSystem.getMusicVolume());
 }

@@ -44,6 +44,7 @@ add_executable(SpaceCourier
     src/HealthKit.cpp
     src/LevelManager.cpp
     src/SoundSystem.cpp
+    src/OptionsMenu.cpp
 )
 
 # Заголовочные файлы
