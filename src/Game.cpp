@@ -149,9 +149,12 @@ void Game::setupMenus() {
     // Настройка главного меню
     mainMenu.setTitle("SPACE COURIER");
     mainMenu.clearButtons();
+    
+    // 👇 ИСПРАВЛЯЕМ: START GAME запускает последний открытый уровень
     mainMenu.addButton("START GAME", [this]() {
-        std::cout << "🎮 Запуск игры!" << std::endl;
-        levelManager.loadLevel(1);
+        int lastLevel = levelManager.getLastUnlockedLevel();
+        std::cout << "🎮 Запуск последнего открытого уровня: " << lastLevel << std::endl;
+        levelManager.loadLevel(lastLevel);
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 300));
     
@@ -181,13 +184,13 @@ void Game::setupMenus() {
     
     pauseMenu.addButton("RESTART LEVEL", [this]() {
         std::cout << "🔄 Перезапуск уровня" << std::endl;
-        // ЗАГРУЖАЕМ ТЕКУЩИЙ УРОВЕНЬ ЗАНОВО
-        levelManager.loadLevel(levelManager.getCurrentLevelNumber());
+        int currentLevel = levelManager.getCurrentLevelNumber();
+        levelManager.loadLevel(currentLevel);
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 380));
     
     pauseMenu.addButton("MAIN MENU", [this]() {
-        std::cout << "🏠 В главное меню" << std::endl;
+        std::cout << "🏠 Выход в главное меню" << std::endl;
         changeState(GameState::MAIN_MENU);
     }, sf::Vector2f(450, 460));
     
@@ -201,8 +204,11 @@ void Game::setupLevelSelectMenu() {
     levelSelectMenu.setTitle("SELECT LEVEL");
     levelSelectMenu.clearButtons();
     
-    // Динамически создаём кнопки для доступных уровней
+    // 👇 ИСПРАВЛЯЕМ: используем правильное количество открытых уровней
     int unlockedLevels = levelManager.getUnlockedLevels();
+    std::cout << "🔄 Настройка меню выбора уровня. Открыто: " << unlockedLevels << std::endl;
+    
+    // Динамически создаём кнопки для доступных уровней
     for (int i = 1; i <= 5; ++i) {
         if (i <= unlockedLevels) {
             levelSelectMenu.addButton("LEVEL " + std::to_string(i), [this, i]() {
@@ -279,7 +285,11 @@ void Game::checkLevelCompletion() {
     // РЕАЛЬНАЯ ПРОВЕРКА ЗАВЕРШЕНИЯ УРОВНЯ
     if (levelManager.getCurrentLevel().isLevelComplete()) {
         levelManager.markLevelComplete();
-        std::cout << "🎉 Уровень " << levelManager.getCurrentLevelNumber() << " завершён!" << std::endl;
+        int completedLevel = levelManager.getCurrentLevelNumber();
+        std::cout << "🎉 Уровень " << completedLevel << " завершён!" << std::endl;
+        
+        // 👇 ИСПРАВЛЯЕМ: ОБНОВЛЯЕМ МЕНЮ ВЫБОРА УРОВНЯ ПЕРЕД ПОКАЗОМ
+        setupLevelSelectMenu();
         
         // Переходим к выбору уровня
         changeState(GameState::LEVEL_SELECT);

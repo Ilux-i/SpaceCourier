@@ -13,6 +13,7 @@ public:
     void onCollisionWithPlayer();
     bool isActive() const;
     bool isStunned() const;
+    void reset();
     
 private:
     sf::RectangleShape shape; // Fallback

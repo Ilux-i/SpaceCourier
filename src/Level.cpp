@@ -3,13 +3,6 @@
 #include <algorithm>
 #include <cmath>
 
-Level::Level() 
-    : currentLevelNumber(1), levelCompleted(false), playerOnMovingPlatform(nullptr) {
-    
-    levelBounds = sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1200.f, 800.f));
-    createLevel1();
-}
-
 Level::Level(int levelNumber) 
     : currentLevelNumber(levelNumber), levelCompleted(false), playerOnMovingPlatform(nullptr) {
     
@@ -24,7 +17,7 @@ Level::Level(int levelNumber)
         default: createLevel1(); break;
     }
     
-    std::cout << "🎮 Создан уровень " << levelNumber << std::endl;
+    std::cout << "   ✅ Уровень " << levelNumber << " создан успешно" << std::endl;
 }
 
 void Level::update(float deltaTime) {
@@ -62,7 +55,6 @@ void Level::update(float deltaTime) {
         handlePlayerAcidCollisions();
         handlePlayerHealthKitCollisions();
     } else {
-        std::cout << "💀 Игрок умер! Запускаем респавн уровня..." << std::endl;
         respawnLevel();
     }
 }
@@ -329,45 +321,56 @@ void Level::handlePlayerHealthKitCollisions() {
 }
 
 void Level::respawnLevel() {
-    std::cout << "🔄 Респавн уровня..." << std::endl;
     
-    // СБРАСЫВАЕМ ЗДОРОВЬЕ ИГРОКА
-    player.getHealthSystem().reset();
+    platforms.clear();
+    enemies.clear();
+    packages.clear();
+    deliveryPoints.clear();
+    acidPools.clear();
+    movingPlatforms.clear();
+    healthKits.clear();
+    packageStartPositions.clear();
+    deliveryPointStartPositions.clear();
     
     // ВОССТАНАВЛИВАЕМ ВСЕ АПТЕЧКИ
-    for (auto& healthKit : healthKits) {
-        healthKit->respawn();
+    switch(currentLevelNumber) {
+        case 1: createLevel1(); break;
+        case 2: createLevel2(); break;
+        case 3: createLevel3(); break;
+        case 4: createLevel4(); break;
+        case 5: createLevel5(); break;
+        default: createLevel1(); break;
     }
     
-    // СБРАСЫВАЕМ СОСТОЯНИЕ ПЛАТФОРМЫ
+    levelCompleted = false;
     playerOnMovingPlatform = nullptr;
-    
-    // РЕСПАВНИМ ИГРОКА
     respawnPlayer();
     
-    // ВОССТАНАВЛИВАЕМ ПОСЫЛКИ
-    for (size_t i = 0; i < packages.size() && i < packageStartPositions.size(); ++i) {
-        packages[i]->setCarried(false);
-        packages[i]->setDelivered(false);
-        packages[i]->setPosition(packageStartPositions[i]);
-        packages[i]->update(0.f);
-    }
-    
-    std::cout << "✅ Уровень перезапущен!" << std::endl;
 }
 
 void Level::respawnPlayer() {
-    player.setPosition(sf::Vector2f(150.f, 450.f));
+    sf::Vector2f startPosition;
+    
+    switch(currentLevelNumber) {
+        case 1: startPosition = sf::Vector2f(150.f, 450.f); break;
+        case 2: startPosition = sf::Vector2f(150.f, 450.f); break;
+        case 3: startPosition = sf::Vector2f(150.f, 450.f); break;
+        case 4: startPosition = sf::Vector2f(150.f, 450.f); break;
+        case 5: startPosition = sf::Vector2f(150.f, 450.f); break;
+        default: startPosition = sf::Vector2f(150.f, 450.f); break;
+    }
+    
+    player.setPosition(startPosition);
     player.setVelocity(sf::Vector2f(0.f, 0.f));
     player.setOnGround(false);
     
-    // Сбрасываем посылку если игрок её нёс
     if (player.isCarryingPackage()) {
-        std::cout << "🔄 Сбрасываем carried package..." << std::endl;
         player.deliverPackage();
     }
     
-    std::cout << "👤 Игрок респавнут на стартовой позиции" << std::endl;
+    player.getHealthSystem().reset();
+    
+    std::cout << "👤 Игрок респавнут на позиции: " << startPosition.x << ", " << startPosition.y << std::endl;
 }
 
 Player& Level::getPlayer() {

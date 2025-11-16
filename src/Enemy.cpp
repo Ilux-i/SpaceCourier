@@ -122,6 +122,27 @@ bool Enemy::isStunned() const {
     return !active;
 }
 
+void Enemy::reset() {
+    position = startPosition;
+    active = true;
+    stunTimer = 0.f;
+    
+    // 👇 ВОССТАНАВЛИВАЕМ ВНЕШНИЙ ВИД
+    if (textureLoaded) {
+        sprite.setColor(sf::Color::White);
+    } else {
+        shape.setFillColor(sf::Color(255, 100, 100, 255));
+    }
+    
+    // 👇 ВОССТАНАВЛИВАЕМ ПАТРУЛИРОВАНИЕ
+    patrolDirection = endPosition - startPosition;
+    float length = std::sqrt(patrolDirection.x * patrolDirection.x + patrolDirection.y * patrolDirection.y);
+    if (length > 0) {
+        patrolDirection.x /= length;
+        patrolDirection.y /= length;
+    }
+}
+
 void Enemy::updatePatrol(float deltaTime) {
     position += patrolDirection * patrolSpeed * deltaTime;
     

@@ -11,20 +11,17 @@ public:
     Level& getCurrentLevel();
     int getCurrentLevelNumber() const;
     int getUnlockedLevels() const;
-    void unlockNextLevel();
+    int getLastUnlockedLevel() const;
     
+    void unlockNextLevel();
     bool isLevelComplete() const;
     void markLevelComplete();
-    
+
 private:
+    void recreateLevel(int levelNumber);  // 👈 ОСНОВНОЙ МЕТОД
+    
     std::vector<std::unique_ptr<Level>> levels;
     int currentLevel;
     int unlockedLevels;
     bool levelCompleted;
-    
-    void createLevel1();
-    void createLevel2();
-    void createLevel3();
-    void createLevel4();
-    void createLevel5();
 };
