@@ -30,7 +30,16 @@ void Level::update(float deltaTime) {
         // ЕСЛИ ИГРОК НА ПЛАТФОРМЕ - ПЕРЕНОСИМ ЕГО
         if (playerOnMovingPlatform) {
             sf::Vector2f platformMovement = playerOnMovingPlatform->getMovement();
-            player.setPosition(player.getPosition() + platformMovement * deltaTime);
+            
+            // Переносим игрока с учётом deltaTime и скорости платформы
+            sf::Vector2f newPosition = player.getPosition() + platformMovement * deltaTime;
+            player.setPosition(newPosition);
+            
+            // Обновляем скорость игрока для плавности
+            player.setVelocity(sf::Vector2f(
+                player.getVelocity().x + platformMovement.x,
+                player.getVelocity().y
+            ));
         }
         
         player.update(deltaTime);
@@ -217,7 +226,7 @@ void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) 
     
     // Определяем направление коллизии
     if (overlap.size.x < overlap.size.y) {
-        // Горизонтальная коллизия
+        // Горизонтальная коллизия - обрабатываем как стену
         if (playerBounds.position.x < platformBounds.position.x) {
             player.setPosition(sf::Vector2f(
                 platformBounds.position.x - playerBounds.size.x,
@@ -230,9 +239,9 @@ void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) 
             ));
         }
         player.setVelocity(sf::Vector2f(0.f, player.getVelocity().y));
-        playerOnMovingPlatform = nullptr; // СБРАСЫВАЕМ ЕСЛИ СБОКУ
+        playerOnMovingPlatform = nullptr;
     } else {
-        // Вертикальная коллизии
+        // Вертикальная коллизия - игрок стоит на платформе
         if (playerBounds.position.y < platformBounds.position.y) {
             // Игрок над платформой (приземление)
             player.setPosition(sf::Vector2f(
@@ -242,12 +251,14 @@ void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) 
             player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
             player.setOnGround(true);
             
-            // ЗАПОМИНАЕМ ПЛАТФОРМУ ТОЛЬКО ЕСЛИ ИГРОК ДЕЙСТВИТЕЛЬНО СТОИТ СВЕРХУ
-            if (player.getVelocity().y >= 0) {
-                playerOnMovingPlatform = &platform;
-                std::cout << "🎯 Игрок встал на движущуюся платформу!" << std::endl;
-            }
+            // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ:
+            // Привязываем игрока к платформе при любом движении
+            playerOnMovingPlatform = &platform;
             
+            // Дополнительная проверка: если игрок активно не прыгает
+            if (player.getVelocity().y >= 0) {
+                std::cout << "🎯 Игрок прочно встал на движущуюся платформу!" << std::endl;
+            }
         } else {
             // Игрок под платформой (удар головой)
             player.setPosition(sf::Vector2f(
