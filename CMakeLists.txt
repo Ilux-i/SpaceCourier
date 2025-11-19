@@ -45,6 +45,7 @@ add_executable(SpaceCourier
     src/LevelManager.cpp
     src/SoundSystem.cpp
     src/OptionsMenu.cpp
+    src/VictoryMenu.cpp
 )
 
 # Заголовочные файлы

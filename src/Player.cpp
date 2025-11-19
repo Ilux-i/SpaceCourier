@@ -69,43 +69,43 @@ void Player::updateAnimation(float deltaTime) {
     
     animationTimer += deltaTime;
     
-    // Определяем количество кадров для каждого состояния
+    // 🔥 УЛУЧШЕННЫЕ НАСТРОЙКИ АНИМАЦИИ
     int frameCount = 1;
-    float frameTime = 0.1f;
+    float frameTime = 0.15f; // Более медленная анимация по умолчанию
     
     switch (currentState) {
         case AnimationState::IDLE:
-            frameCount = 1; // 1 кадр для стояния
-            frameTime = 0.2f;
+            frameCount = 4; // 🔥 Увеличиваем кадры для idle
+            frameTime = 0.3f; // 🔥 Замедляем анимацию покоя
             break;
         case AnimationState::WALKING:
-            frameCount = 6; // 6 кадров ходьбы
-            frameTime = 0.08f;
+            frameCount = 6; 
+            frameTime = 0.12f; // 🔥 Немного замедляем ходьбу
             break;
         case AnimationState::JUMPING:
-            frameCount = 6; // 6 кадров прыжка
+            frameCount = 3; // 🔥 Уменьшаем кадры прыжка для чёткости
             frameTime = 0.1f;
             break;
     }
     
-    // Анимируем если есть больше 1 кадра
-    if (frameCount > 1 && animationTimer > frameTime) {
+    // 🔥 ПЛАВНАЯ СМЕНА КАДРОВ
+    if (frameCount > 1 && animationTimer >= frameTime) {
         currentFrame = (currentFrame + 1) % frameCount;
         animationTimer = 0.f;
+        
+        // 🔥 ОБНОВЛЯЕМ ТЕКСТУРНЫЙ РЕКТ ТОЛЬКО ПРИ СМЕНЕ КАДРА
+        int frameWidth = 32;
+        int frameHeight = 32;
+        
+        sf::Vector2i framePosition(currentFrame * frameWidth, 0);
+        sf::Vector2i frameSize(frameWidth, frameHeight);
+        sprite.setTextureRect(sf::IntRect(framePosition, frameSize));
     }
     
-    // Устанавливаем текущий кадр
-    int frameWidth = 32; // Предполагаем ширину кадра 32 пикселя
-    int frameHeight = 32; // Предполагаем высоту кадра 32 пикселя
-    
-    sf::Vector2i framePosition(currentFrame * frameWidth, 0);
-    sf::Vector2i frameSize(frameWidth, frameHeight);
-    sprite.setTextureRect(sf::IntRect(framePosition, frameSize));
-    
-    // Отражаем спрайт по горизонтали если смотрим влево
+    // 🔥 ОБРАБОТКА ОТРАЖЕНИЯ СПРАЙТА
     if (!facingRight) {
         sprite.setScale(sf::Vector2f(-1.5f, 1.5f));
-        sprite.setOrigin(sf::Vector2f(frameWidth / 2.0f, 0.f));
+        sprite.setOrigin(sf::Vector2f(32.f, 0.f)); // Фиксированный origin
     } else {
         sprite.setScale(sf::Vector2f(1.5f, 1.5f));
         sprite.setOrigin(sf::Vector2f(0.f, 0.f));
@@ -115,19 +115,22 @@ void Player::updateAnimation(float deltaTime) {
 void Player::update(float deltaTime) {
     healthSystem.update(deltaTime);
     
-    // ОПРЕДЕЛЯЕМ СОСТОЯНИЕ АНИМАЦИИ
+    // 🔥 УЛУЧШЕННОЕ ОПРЕДЕЛЕНИЕ СОСТОЯНИЯ
     if (!onGround) {
         setAnimationState(AnimationState::JUMPING);
-    } else if (std::abs(velocity.x) > 0.1f) {
+    } else if (std::abs(velocity.x) > 5.0f) { // 🔥 Повышаем порог для анимации ходьбы
         setAnimationState(AnimationState::WALKING);
         // Определяем направление
         if (velocity.x > 0) facingRight = true;
         else if (velocity.x < 0) facingRight = false;
     } else {
-        setAnimationState(AnimationState::IDLE);
+        // 🔥 ПЛАВНЫЙ ПЕРЕХОД В IDLE
+        if (currentState != AnimationState::IDLE) {
+            setAnimationState(AnimationState::IDLE);
+        }
     }
     
-    // ОБНОВЛЯЕМ АНИМАЦИЮ
+    // Обновляем анимацию
     if (textureLoaded) {
         updateAnimation(deltaTime);
     }

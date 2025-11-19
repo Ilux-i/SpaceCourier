@@ -16,6 +16,7 @@ Game::Game()
     setupMenus();
     setupLevelSelectMenu();
     setupOptionsMenu();
+    setupVictoryMenu();
 }
 
 void Game::run() {
@@ -55,6 +56,9 @@ void Game::processEvents() {
             case GameState::OPTIONS:
                 optionsMenu.handleEvent(*event, window);
                 break;
+            case GameState::VICTORY:
+                victoryMenu.handleEvent(*event, window);
+                break;
             case GameState::EXIT:
                 window.close();
                 break;
@@ -83,6 +87,9 @@ void Game::update(float deltaTime) {
         case GameState::OPTIONS:
             optionsMenu.update(deltaTime);
             break;
+        case GameState::VICTORY:
+            victoryMenu.update(deltaTime);
+            break;
         case GameState::EXIT:
             break;
     }
@@ -108,6 +115,9 @@ void Game::render() {
         case GameState::OPTIONS:
             optionsMenu.draw(window);
             break;
+        case GameState::VICTORY:
+            victoryMenu.draw(window);
+            break;
         case GameState::EXIT:
             break;
     }
@@ -132,7 +142,10 @@ void Game::changeState(GameState newState) {
             }
             break;
         case GameState::LEVEL_SELECT:
-            soundSystem.playMusic(MusicType::MAIN_MENU);  // Или специальная музыка для выбора уровня
+            soundSystem.playMusic(MusicType::MAIN_MENU);
+            break;
+        case GameState::VICTORY:
+            soundSystem.playMusic(MusicType::VICTORY);
             break;
         case GameState::PAUSED:
             soundSystem.pauseMusic();
@@ -198,6 +211,14 @@ void Game::setupMenus() {
         std::cout << "🚪 Выход из игры" << std::endl;
         changeState(GameState::EXIT);
     }, sf::Vector2f(450, 540));
+
+    victoryMenu.setMainMenuCallback([this]() {
+        changeState(GameState::MAIN_MENU);
+    });
+
+    victoryMenu.setExitCallback([this]() {
+        changeState(GameState::EXIT);
+    });
 }
 
 void Game::setupLevelSelectMenu() {
@@ -281,20 +302,52 @@ void Game::handleContinuousInput() {
     }
 }
 
+void Game::loadNextLevel() {
+    int currentLevel = levelManager.getCurrentLevelNumber();
+    int nextLevel = currentLevel + 1;
+    
+    if (nextLevel <= 5 && nextLevel <= levelManager.getUnlockedLevels()) {
+        std::cout << "🎮 Загрузка следующего уровня: " << nextLevel << std::endl;
+        levelManager.loadLevel(nextLevel);
+        changeState(GameState::PLAYING);
+    } else {
+        std::cout << "❌ Следующий уровень недоступен, переход к выбору уровня" << std::endl;
+        setupLevelSelectMenu();
+        changeState(GameState::LEVEL_SELECT);
+    }
+}
+
+void Game::setupVictoryMenu() {
+    victoryMenu.setMainMenuCallback([this]() {
+        std::cout << "🏠 Возврат в главное меню с экрана победы" << std::endl;
+        changeState(GameState::MAIN_MENU);
+    });
+    
+    victoryMenu.setExitCallback([this]() {
+        std::cout << "🚪 Выход из игры с экрана победы" << std::endl;
+        changeState(GameState::EXIT);
+    });
+    
+    victoryMenu.setNextLevelCallback([this]() {
+        std::cout << "➡️ Переход к следующему уровню" << std::endl;
+        loadNextLevel();
+    });
+    
+    std::cout << "✅ Экран победы настроен!" << std::endl;
+}
+
 void Game::checkLevelCompletion() {
-    // РЕАЛЬНАЯ ПРОВЕРКА ЗАВЕРШЕНИЯ УРОВНЯ
     if (levelManager.getCurrentLevel().isLevelComplete()) {
         levelManager.markLevelComplete();
         int completedLevel = levelManager.getCurrentLevelNumber();
         std::cout << "🎉 Уровень " << completedLevel << " завершён!" << std::endl;
         
-        // 👇 ИСПРАВЛЯЕМ: ОБНОВЛЯЕМ МЕНЮ ВЫБОРА УРОВНЯ ПЕРЕД ПОКАЗОМ
-        setupLevelSelectMenu();
-        
-        // Переходим к выбору уровня
-        changeState(GameState::LEVEL_SELECT);
+        // 🔥 УСТАНАВЛИВАЕМ ИНФОРМАЦИЮ О УРОВНЕ И ПОКАЗЫВАЕМ ЭКРАН ПОБЕДЫ
+        victoryMenu.setLevelInfo(completedLevel, 5); // 5 - всего уровней
+        changeState(GameState::VICTORY);
     }
 }
+
 
 void Game::setupOptionsMenu() {
     optionsMenu.setBackCallback([this]() {

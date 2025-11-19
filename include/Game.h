@@ -5,6 +5,7 @@
 #include "InputHandler.h"
 #include "SoundSystem.h"
 #include "OptionsMenu.h"
+#include "VictoryMenu.h"
 
 enum class GameState {
     MAIN_MENU,
@@ -12,6 +13,7 @@ enum class GameState {
     PAUSED,
     LEVEL_SELECT,
     OPTIONS,
+    VICTORY,
     EXIT
 };
 
@@ -29,6 +31,8 @@ private:
     void setupMenus();
     void setupLevelSelectMenu();
     void setupOptionsMenu();
+    void setupVictoryMenu();
+    void loadNextLevel();
     
     void handleGameEvents(const sf::Event& event);
     void handleContinuousInput();
@@ -42,6 +46,7 @@ private:
     Menu pauseMenu;
     Menu levelSelectMenu;
     OptionsMenu optionsMenu;
+    VictoryMenu victoryMenu;
     
     LevelManager levelManager;
     InputHandler inputHandler;
