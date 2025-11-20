@@ -4,6 +4,8 @@
 #include "Package.h"
 #include <SFML/Graphics.hpp>
 #include "PackageIndicator.h"
+#include <unordered_map>
+#include <memory>
 
 class Player : public Entity {
 public:
@@ -52,16 +54,26 @@ private:
     sf::Texture idleTexture;
     sf::Texture walkTexture;
     sf::Texture jumpTexture;
-    sf::Sprite sprite{idleTexture};
+    std::unique_ptr<sf::Sprite> sprite;
     bool textureLoaded;
 
-    // АНИМАЦИЯ
     AnimationState currentState;
     float animationTimer;
     int currentFrame;
     bool facingRight;
     
-    void loadTextures(); // ИЗМЕНЯЕМ НАЗВАНИЕ МЕТОДА
+    struct AnimationConfig {
+        int frameCount;
+        float frameTime;
+        bool loop;
+    };
+    
+    std::unordered_map<AnimationState, AnimationConfig> animationConfigs;
+    float frameTimer;
+    
+    void loadTextures();
     void updateAnimation(float deltaTime);
     void setAnimationState(AnimationState newState);
+    void setupAnimations();
+    void updateVisualPosition();
 };

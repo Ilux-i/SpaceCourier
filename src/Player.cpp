@@ -1,10 +1,19 @@
 #include "Player.h"
 #include <iostream>
 
-Player::Player() : onGround(false), jumpForce(500.f), moveSpeed(300.f), gravity(800.f), 
-                   carriedPackage(nullptr), textureLoaded(false), animationTimer(0.f), 
-                   currentFrame(0), facingRight(true), currentState(AnimationState::IDLE)
-                   // sprite уже инициализирован при объявлении
+Player::Player() 
+    : Entity(),
+      onGround(false), 
+      jumpForce(500.f), 
+      moveSpeed(300.f), 
+      gravity(800.f), 
+      carriedPackage(nullptr), 
+      textureLoaded(false), 
+      animationTimer(0.f), 
+      currentFrame(0), 
+      facingRight(true), 
+      currentState(AnimationState::IDLE),
+      frameTimer(0.f)
 {
     // Базовый геометрический shape (fallback)
     shape.setRadius(25.f);
@@ -12,12 +21,28 @@ Player::Player() : onGround(false), jumpForce(500.f), moveSpeed(300.f), gravity(
     shape.setPosition(position);
     baseMoveSpeed = moveSpeed;
     
+    // Настраиваем анимации перед загрузкой текстур
+    setupAnimations();
+    
     // Загружаем текстуры
     loadTextures();
 }
 
+void Player::setupAnimations() {
+    animationConfigs[AnimationState::IDLE] = {4, 0.2f, true};
+    animationConfigs[AnimationState::WALKING] = {6, 0.1f, true};
+    animationConfigs[AnimationState::JUMPING] = {3, 0.15f, false};
+}
+
+void Player::updateVisualPosition() {
+    if (textureLoaded && sprite) {
+        sprite->setPosition(position);
+    } else {
+        shape.setPosition(position);
+    }
+}
+
 void Player::loadTextures() {
-    // Пытаемся загрузить все три текстуры
     bool idleLoaded = idleTexture.loadFromFile("assets/sprites/characters/player_idle.png");
     bool walkLoaded = walkTexture.loadFromFile("assets/sprites/characters/player_walk.png");
     bool jumpLoaded = jumpTexture.loadFromFile("assets/sprites/characters/player_jump.png");
@@ -25,20 +50,14 @@ void Player::loadTextures() {
     textureLoaded = idleLoaded && walkLoaded && jumpLoaded;
     
     if (!textureLoaded) {
-        std::cout << "❌ Не удалось загрузить некоторые текстуры игрока:" << std::endl;
-        if (!idleLoaded) std::cout << "   - player_idle.png" << std::endl;
-        if (!walkLoaded) std::cout << "   - player_walk.png" << std::endl;
-        if (!jumpLoaded) std::cout << "   - player_jump.png" << std::endl;
-        std::cout << "   Используем геометрическую форму" << std::endl;
+        std::cout << "❌ Не удалось загрузить некоторые текстуры игрока" << std::endl;
         return;
     }
     
-    // НАСТРАИВАЕМ УЖЕ СОЗДАННЫЙ SPRITE
-    sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-    sprite.setScale(sf::Vector2f(1.5f, 1.5f));
-    sprite.setPosition(position);
-    
-    std::cout << "✅ Все текстуры игрока загружены успешно!" << std::endl;
+    sprite = std::make_unique<sf::Sprite>(idleTexture); // 👈 СОЗДАЕМ С ТЕКСТУРОЙ
+    sprite->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
+    sprite->setScale(sf::Vector2f(1.5f, 1.5f));
+    sprite->setPosition(position);
 }
 
 void Player::setAnimationState(AnimationState newState) {
@@ -46,99 +65,76 @@ void Player::setAnimationState(AnimationState newState) {
     
     currentState = newState;
     currentFrame = 0;
-    animationTimer = 0.f;
+    frameTimer = 0.f;
     
-    if (!textureLoaded) return;
+    if (!textureLoaded || !sprite) return;
     
-    // Переключаем текстуру в зависимости от состояния
     switch (currentState) {
         case AnimationState::IDLE:
-            sprite.setTexture(idleTexture);
+            sprite->setTexture(idleTexture);
             break;
         case AnimationState::WALKING:
-            sprite.setTexture(walkTexture);
+            sprite->setTexture(walkTexture);
             break;
         case AnimationState::JUMPING:
-            sprite.setTexture(jumpTexture);
+            sprite->setTexture(jumpTexture);
             break;
     }
+    
+    int frameWidth = 32;
+    int frameHeight = 32;
+    sprite->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(frameWidth, frameHeight)));
 }
 
 void Player::updateAnimation(float deltaTime) {
-    if (!textureLoaded) return;
+    if (!textureLoaded || !sprite) return;
     
-    animationTimer += deltaTime;
+    if (deltaTime > 0.1f) deltaTime = 0.1f;
     
-    // 🔥 УЛУЧШЕННЫЕ НАСТРОЙКИ АНИМАЦИИ
-    int frameCount = 1;
-    float frameTime = 0.15f; // Более медленная анимация по умолчанию
+    auto& anim = animationConfigs[currentState];
+    frameTimer += deltaTime;
     
-    switch (currentState) {
-        case AnimationState::IDLE:
-            frameCount = 4; // 🔥 Увеличиваем кадры для idle
-            frameTime = 0.3f; // 🔥 Замедляем анимацию покоя
-            break;
-        case AnimationState::WALKING:
-            frameCount = 6; 
-            frameTime = 0.12f; // 🔥 Немного замедляем ходьбу
-            break;
-        case AnimationState::JUMPING:
-            frameCount = 3; // 🔥 Уменьшаем кадры прыжка для чёткости
-            frameTime = 0.1f;
-            break;
-    }
-    
-    // 🔥 ПЛАВНАЯ СМЕНА КАДРОВ
-    if (frameCount > 1 && animationTimer >= frameTime) {
-        currentFrame = (currentFrame + 1) % frameCount;
-        animationTimer = 0.f;
+    if (anim.frameCount > 1 && frameTimer >= anim.frameTime) {
+        currentFrame = (currentFrame + 1) % anim.frameCount;
+        frameTimer = 0.f;
         
-        // 🔥 ОБНОВЛЯЕМ ТЕКСТУРНЫЙ РЕКТ ТОЛЬКО ПРИ СМЕНЕ КАДРА
         int frameWidth = 32;
         int frameHeight = 32;
-        
         sf::Vector2i framePosition(currentFrame * frameWidth, 0);
         sf::Vector2i frameSize(frameWidth, frameHeight);
-        sprite.setTextureRect(sf::IntRect(framePosition, frameSize));
+        sprite->setTextureRect(sf::IntRect(framePosition, frameSize));
     }
     
-    // 🔥 ОБРАБОТКА ОТРАЖЕНИЯ СПРАЙТА
     if (!facingRight) {
-        sprite.setScale(sf::Vector2f(-1.5f, 1.5f));
-        sprite.setOrigin(sf::Vector2f(32.f, 0.f)); // Фиксированный origin
+        sprite->setScale(sf::Vector2f(-1.5f, 1.5f));
+        sprite->setOrigin(sf::Vector2f(32.f, 0.f));
     } else {
-        sprite.setScale(sf::Vector2f(1.5f, 1.5f));
-        sprite.setOrigin(sf::Vector2f(0.f, 0.f));
+        sprite->setScale(sf::Vector2f(1.5f, 1.5f));
+        sprite->setOrigin(sf::Vector2f(0.f, 0.f));
     }
 }
 
 void Player::update(float deltaTime) {
     healthSystem.update(deltaTime);
     
-    // 🔥 УЛУЧШЕННОЕ ОПРЕДЕЛЕНИЕ СОСТОЯНИЯ
     if (!onGround) {
         setAnimationState(AnimationState::JUMPING);
-    } else if (std::abs(velocity.x) > 5.0f) { // 🔥 Повышаем порог для анимации ходьбы
+    } else if (std::abs(velocity.x) > 10.0f) {
         setAnimationState(AnimationState::WALKING);
-        // Определяем направление
         if (velocity.x > 0) facingRight = true;
         else if (velocity.x < 0) facingRight = false;
     } else {
-        // 🔥 ПЛАВНЫЙ ПЕРЕХОД В IDLE
         if (currentState != AnimationState::IDLE) {
             setAnimationState(AnimationState::IDLE);
         }
     }
     
-    // Обновляем анимацию
     if (textureLoaded) {
         updateAnimation(deltaTime);
     }
     
-    // ОБНОВЛЯЕМ ИНДИКАТОР ПОСЫЛКИ
     packageIndicator.update(deltaTime);
     
-    // Обновляем позицию посылки если несём её
     if (carriedPackage && !carriedPackage->isDelivered()) {
         carriedPackage->setPosition(sf::Vector2f(
             position.x - 5.f, 
@@ -147,33 +143,22 @@ void Player::update(float deltaTime) {
         carriedPackage->update(deltaTime);
     }
     
-    // Применяем гравитацию
     if (!onGround) {
         velocity.y += gravity * deltaTime;
     }
     
-    // Обновляем позицию
     position += velocity * deltaTime;
-    
-    // ОБНОВЛЯЕМ ПОЗИЦИЮ СПРАЙТА ИЛИ ФОРМЫ
-    if (textureLoaded) {
-        sprite.setPosition(position);
-    } else {
-        shape.setPosition(position);
-    }
-    
-    // Сбрасываем горизонтальную скорость для плавного управления
+    updateVisualPosition();
     velocity.x = 0;
 }
 
 void Player::draw(sf::RenderWindow& window) const {
-    if (textureLoaded) {
-        window.draw(sprite);
+    if (textureLoaded && sprite) {
+        window.draw(*sprite);
     } else {
-        window.draw(shape); // Fallback
+        window.draw(shape);
     }
     
-    // Рисуем посылку если несём её
     if (carriedPackage && !carriedPackage->isDelivered()) {
         carriedPackage->draw(window);
     }
@@ -183,9 +168,7 @@ void Player::draw(sf::RenderWindow& window) const {
 }
 
 sf::FloatRect Player::getBounds() const {
-    // РАЗМЕРЫ КОЛЛИЗИИ ОСТАЮТСЯ ПРЕЖНИМИ!
-    if (textureLoaded) {
-        // Используем те же размеры что и у геометрической формы
+    if (textureLoaded && sprite) {
         return sf::FloatRect(position, sf::Vector2f(50.f, 50.f));
     }
     return shape.getGlobalBounds();
