@@ -69,7 +69,8 @@ void AcidPool::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect AcidPool::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sprite.getGlobalBounds().size);
+        sf::FloatRect spriteBounds = sprite.getGlobalBounds();
+        return spriteBounds;
     }
     return shape.getGlobalBounds();
 }

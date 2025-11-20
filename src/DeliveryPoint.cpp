@@ -55,7 +55,8 @@ void DeliveryPoint::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect DeliveryPoint::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sf::Vector2f(50.f, 50.f));
+        sf::FloatRect spriteBounds = sprite.getGlobalBounds();
+        return spriteBounds;
     }
     return shape.getGlobalBounds();
 }

@@ -94,7 +94,8 @@ void Enemy::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect Enemy::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sf::Vector2f(40.f, 40.f));
+        sf::FloatRect spriteBounds = sprite.getGlobalBounds();
+        return spriteBounds;
     }
     return shape.getGlobalBounds();
 }

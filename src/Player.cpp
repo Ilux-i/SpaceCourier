@@ -52,12 +52,15 @@ void Player::loadTextures() {
     if (!textureLoaded) {
         std::cout << "❌ Не удалось загрузить некоторые текстуры игрока" << std::endl;
         return;
+    } else {
+        sprite = std::make_unique<sf::Sprite>(idleTexture);
+        sprite->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
+        sprite->setScale(sf::Vector2f(1.5f, 1.5f));
+        
+        sf::FloatRect bounds = sprite->getLocalBounds();
+        sprite->setOrigin(sf::Vector2f(bounds.size.x / 2, bounds.size.y / 2)); // Центрируем
+        sprite->setPosition(position);
     }
-    
-    sprite = std::make_unique<sf::Sprite>(idleTexture); // 👈 СОЗДАЕМ С ТЕКСТУРОЙ
-    sprite->setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-    sprite->setScale(sf::Vector2f(1.5f, 1.5f));
-    sprite->setPosition(position);
 }
 
 void Player::setAnimationState(AnimationState newState) {
@@ -169,7 +172,17 @@ void Player::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect Player::getBounds() const {
     if (textureLoaded && sprite) {
-        return sf::FloatRect(position, sf::Vector2f(50.f, 50.f));
+        sf::FloatRect spriteBounds = sprite->getGlobalBounds();
+        
+        float width = spriteBounds.size.x * 0.8f;
+        float height = spriteBounds.size.y;
+        float offsetX = (spriteBounds.size.x - width) / 2;
+        float offsetY = (spriteBounds.size.y - height) / 2;
+        
+        return sf::FloatRect(
+            sf::Vector2f(spriteBounds.position.x + offsetX, spriteBounds.position.y + offsetY),
+            sf::Vector2f(width, height)
+        );
     }
     return shape.getGlobalBounds();
 }

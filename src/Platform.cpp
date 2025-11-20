@@ -62,7 +62,7 @@ void Platform::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect Platform::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sprite.getGlobalBounds().size);
+        return sprite.getGlobalBounds();
     }
     return shape.getGlobalBounds();
 }

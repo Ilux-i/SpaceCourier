@@ -59,7 +59,8 @@ void HealthKit::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect HealthKit::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sf::Vector2f(30.f, 30.f));
+        sf::FloatRect spriteBounds = sprite.getGlobalBounds();
+        return spriteBounds;
     }
     return shape.getGlobalBounds();
 }

@@ -53,7 +53,8 @@ void Package::draw(sf::RenderWindow& window) const {
 
 sf::FloatRect Package::getBounds() const {
     if (textureLoaded) {
-        return sf::FloatRect(position, sf::Vector2f(30.f, 30.f));
+        sf::FloatRect spriteBounds = sprite.getGlobalBounds();
+        return spriteBounds;
     }
     return shape.getGlobalBounds();
 }

@@ -176,9 +176,7 @@ void Level::handlePlayerPlatformCollision(const Platform& platform) {
     
     sf::FloatRect overlap = intersection.value();
     
-    // Определяем направление коллизии
     if (overlap.size.x < overlap.size.y) {
-        // Горизонтальная коллизия
         if (playerBounds.position.x < platformBounds.position.x) {
             // Игрок слева от платформы
             player.setPosition(sf::Vector2f(
@@ -194,9 +192,7 @@ void Level::handlePlayerPlatformCollision(const Platform& platform) {
         }
         player.setVelocity(sf::Vector2f(0.f, player.getVelocity().y));
     } else {
-        // Вертикальная коллизия
         if (playerBounds.position.y < platformBounds.position.y) {
-            // Игрок над платформой (приземление)
             player.setPosition(sf::Vector2f(
                 player.getPosition().x,
                 platformBounds.position.y - playerBounds.size.y
@@ -204,7 +200,6 @@ void Level::handlePlayerPlatformCollision(const Platform& platform) {
             player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
             player.setOnGround(true);
         } else {
-            // Игрок под платформой (удар головой)
             player.setPosition(sf::Vector2f(
                 player.getPosition().x,
                 platformBounds.position.y + platformBounds.size.y
@@ -223,10 +218,8 @@ void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) 
     if (!intersection.has_value()) return;
     
     sf::FloatRect overlap = intersection.value();
-    
-    // Определяем направление коллизии
     if (overlap.size.x < overlap.size.y) {
-        // Горизонтальная коллизия - обрабатываем как стену
+        // Горизонтальная коллизия
         if (playerBounds.position.x < platformBounds.position.x) {
             player.setPosition(sf::Vector2f(
                 platformBounds.position.x - playerBounds.size.x,
@@ -241,26 +234,16 @@ void Level::handlePlayerMovingPlatformCollision(const MovingPlatform& platform) 
         player.setVelocity(sf::Vector2f(0.f, player.getVelocity().y));
         playerOnMovingPlatform = nullptr;
     } else {
-        // Вертикальная коллизия - игрок стоит на платформе
+        // Вертикальная коллизия
         if (playerBounds.position.y < platformBounds.position.y) {
-            // Игрок над платформой (приземление)
             player.setPosition(sf::Vector2f(
                 player.getPosition().x,
                 platformBounds.position.y - playerBounds.size.y
             ));
             player.setVelocity(sf::Vector2f(player.getVelocity().x, 0.f));
             player.setOnGround(true);
-            
-            // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ:
-            // Привязываем игрока к платформе при любом движении
             playerOnMovingPlatform = &platform;
-            
-            // Дополнительная проверка: если игрок активно не прыгает
-            if (player.getVelocity().y >= 0) {
-                std::cout << "🎯 Игрок прочно встал на движущуюся платформу!" << std::endl;
-            }
         } else {
-            // Игрок под платформой (удар головой)
             player.setPosition(sf::Vector2f(
                 player.getPosition().x,
                 platformBounds.position.y + platformBounds.size.y
