@@ -3,19 +3,17 @@
 
 HealthKit::HealthKit(const sf::Vector2f& position) 
     : collected(false), textureLoaded(false),
-      sprite(texture) // Инициализируем с текстурой
+      sprite(texture)
 {
-    // Базовый геометрический shape (fallback)
     shape.setRadius(15.f);
     shape.setFillColor(sf::Color(255, 50, 50, 255));
     shape.setOutlineColor(sf::Color::White);
     shape.setOutlineThickness(2.f);
     shape.setPosition(position);
-    shape.setPointCount(4); // Ромб вместо круга
+    shape.setPointCount(4);
     
     this->position = position;
     
-    // Загружаем текстуру
     loadTexture();
 }
 
@@ -28,16 +26,13 @@ void HealthKit::loadTexture() {
     
     textureLoaded = true;
     
-    // Настраиваем спрайт
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-    sprite.setScale(sf::Vector2f(0.8f, 0.8f)); // Масштаб для соответствия размерам
+    sprite.setScale(sf::Vector2f(0.8f, 0.8f));
     sprite.setPosition(position);
     
-    std::cout << "✅ Текстура аптечки загружена успешно!" << std::endl;
 }
 
 void HealthKit::update(float deltaTime) {
-    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ
     if (!collected) {
         if (textureLoaded) {
             sprite.setPosition(position);
@@ -72,7 +67,6 @@ bool HealthKit::isCollected() const {
 void HealthKit::collect() {
     if (!collected) {
         collected = true;
-        std::cout << "❤️ Аптечка собрана!" << std::endl;
     }
 }
 
@@ -83,5 +77,4 @@ void HealthKit::respawn() {
     } else {
         shape.setPosition(position);
     }
-    std::cout << "🔄 Аптечка восстановилась!" << std::endl;
 }

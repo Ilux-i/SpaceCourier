@@ -15,16 +15,13 @@ Player::Player()
       currentState(AnimationState::IDLE),
       frameTimer(0.f)
 {
-    // Базовый геометрический shape (fallback)
     shape.setRadius(25.f);
     shape.setFillColor(sf::Color(220, 50, 50, 255));
     shape.setPosition(position);
     baseMoveSpeed = moveSpeed;
     
-    // Настраиваем анимации перед загрузкой текстур
     setupAnimations();
     
-    // Загружаем текстуры
     loadTextures();
 }
 
@@ -58,7 +55,7 @@ void Player::loadTextures() {
         sprite->setScale(sf::Vector2f(1.5f, 1.5f));
         
         sf::FloatRect bounds = sprite->getLocalBounds();
-        sprite->setOrigin(sf::Vector2f(bounds.size.x / 2, bounds.size.y / 2)); // Центрируем
+        sprite->setOrigin(sf::Vector2f(bounds.size.x / 2, bounds.size.y / 2));
         sprite->setPosition(position);
     }
 }
@@ -141,7 +138,7 @@ void Player::update(float deltaTime) {
     if (carriedPackage && !carriedPackage->isDelivered()) {
         carriedPackage->setPosition(sf::Vector2f(
             position.x - 5.f, 
-            position.y - 40.f
+            position.y - 20.f
         ));
         carriedPackage->update(deltaTime);
     }
@@ -191,7 +188,6 @@ void Player::jump() {
     if (onGround && healthSystem.isAlive()) {
         velocity.y = -jumpForce;
         onGround = false;
-        std::cout << "🔼 Игрок прыгнул!" << std::endl;
     }
 }
 
@@ -232,20 +228,10 @@ void Player::pickUpPackage(Package* package) {
         carriedPackage = package;
         carriedPackage->setCarried(true);
         
-        // ВКЛЮЧАЕМ ИНДИКАТОР ПОСЫЛКИ
         packageIndicator.setVisible(true);
         
-        // Замедление скорости на 20% при ношении посылки
         moveSpeed = baseMoveSpeed * 0.8f;
         
-        std::cout << "📦 Игрок поднял посылку! Скорость уменьшена на 20%" << std::endl;
-        std::cout << "   Новая скорость: " << moveSpeed << " (базовая: " << baseMoveSpeed << ")" << std::endl;
-    } else {
-        std::cout << "❌ Не могу поднять посылку: ";
-        if (isCarryingPackage()) std::cout << "уже несу посылку";
-        else if (!package) std::cout << "посылка nullptr";
-        else if (package->isDelivered()) std::cout << "посылка уже доставлена";
-        std::cout << std::endl;
     }
 }
 
@@ -255,13 +241,9 @@ void Player::deliverPackage() {
         carriedPackage->setCarried(false);
         carriedPackage = nullptr;
         
-        // ВЫКЛЮЧАЕМ ИНДИКАТОР ПОСЫЛКИ
         packageIndicator.setVisible(false);
         
-        // Восстанавливаем нормальную скорость
         moveSpeed = baseMoveSpeed;
-        
-        std::cout << "✅ Посылка доставлена! Скорость восстановлена: " << moveSpeed << std::endl;
     } else {
         std::cout << "❌ Не могу доставить посылку: не несу посылку" << std::endl;
     }

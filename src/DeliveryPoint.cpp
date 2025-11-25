@@ -3,15 +3,13 @@
 
 DeliveryPoint::DeliveryPoint(const sf::Vector2f& position) 
     : active(true), textureLoaded(false),
-      sprite(texture) // Инициализируем с текстурой
+      sprite(texture)
 {
-    // Базовый геометрический shape (fallback)
     shape.setSize(sf::Vector2f(50.f, 50.f));
-    shape.setFillColor(sf::Color(100, 255, 100, 150)); // Зелёный полупрозрачный
+    shape.setFillColor(sf::Color(100, 255, 100, 150));
     shape.setPosition(position);
     this->position = position;
     
-    // Загружаем текстуру
     loadTexture();
 }
 
@@ -24,16 +22,12 @@ void DeliveryPoint::loadTexture() {
     
     textureLoaded = true;
     
-    // Настраиваем спрайт
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-    sprite.setScale(sf::Vector2f(1.6f, 1.6f)); // Масштаб для соответствия размерам 50x50
+    sprite.setScale(sf::Vector2f(1.6f, 1.6f));
     sprite.setPosition(position);
-    
-    std::cout << "✅ Текстура точки доставки загружена успешно!" << std::endl;
 }
 
 void DeliveryPoint::update(float deltaTime) {
-    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ МИГАНИЯ
     if (active) {
         if (textureLoaded) {
             sprite.setPosition(position);

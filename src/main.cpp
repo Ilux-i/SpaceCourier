@@ -2,8 +2,6 @@
 #include <iostream>
 
 int main() {
-    std::cout << "🚀 Space Courier - Game Launch!" << std::endl;
-    
     try {
         Game game;
         game.run();

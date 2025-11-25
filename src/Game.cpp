@@ -8,7 +8,6 @@ Game::Game()
 {
     window.setFramerateLimit(60);
     
-    // Инициализируем звуковую систему
     if (soundSystem.initialize()) {
         soundSystem.playMusic(MusicType::MAIN_MENU);
     }
@@ -20,8 +19,6 @@ Game::Game()
 }
 
 void Game::run() {
-    std::cout << "🚀 Запуск игры Space Courier!" << std::endl;
-    
     sf::Clock clock;
     while (window.isOpen() && currentState != GameState::EXIT) {
         float deltaTime = clock.restart().asSeconds();
@@ -29,9 +26,7 @@ void Game::run() {
         processEvents();
         update(deltaTime);
         render();
-    }
-    
-    std::cout << "👋 Игра завершена!" << std::endl;
+    } 
 }
 
 void Game::processEvents() {
@@ -129,7 +124,6 @@ void Game::changeState(GameState newState) {
     previousState = currentState;
     currentState = newState;
     
-    // Переключаем музыку в зависимости от состояния
     switch (newState) {
         case GameState::MAIN_MENU:
             soundSystem.playMusic(MusicType::MAIN_MENU);
@@ -154,61 +148,48 @@ void Game::changeState(GameState newState) {
             break;
     }
     
-    std::cout << "🔄 Смена состояния: " << static_cast<int>(previousState) 
-              << " -> " << static_cast<int>(currentState) << std::endl;
 }
 
 void Game::setupMenus() {
-    // Настройка главного меню
     mainMenu.setTitle("SPACE COURIER");
     mainMenu.clearButtons();
     
-    // 👇 ИСПРАВЛЯЕМ: START GAME запускает последний открытый уровень
     mainMenu.addButton("START GAME", [this]() {
         int lastLevel = levelManager.getLastUnlockedLevel();
-        std::cout << "🎮 Запуск последнего открытого уровня: " << lastLevel << std::endl;
         levelManager.loadLevel(lastLevel);
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 300));
     
     mainMenu.addButton("LEVEL SELECT", [this]() {
-        std::cout << "🗂️ Выбор уровня" << std::endl;
         setupLevelSelectMenu();
         changeState(GameState::LEVEL_SELECT);
     }, sf::Vector2f(450, 380));
     
     mainMenu.addButton("OPTIONS", [this]() {
-        std::cout << "⚙️ Настройки" << std::endl;
         changeState(GameState::OPTIONS);
     }, sf::Vector2f(450, 460));
     
     mainMenu.addButton("EXIT GAME", [this]() {
-        std::cout << "🚪 Выход из игры" << std::endl;
         changeState(GameState::EXIT);
     }, sf::Vector2f(450, 540));
     
-    // Настройка меню паузы
     pauseMenu.setTitle("GAME PAUSED");
     pauseMenu.clearButtons();
     pauseMenu.addButton("RESUME GAME", [this]() {
-        std::cout << "▶️ Продолжить игру" << std::endl;
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 300));
     
     pauseMenu.addButton("RESTART LEVEL", [this]() {
-        std::cout << "🔄 Перезапуск уровня" << std::endl;
         int currentLevel = levelManager.getCurrentLevelNumber();
         levelManager.loadLevel(currentLevel);
         changeState(GameState::PLAYING);
     }, sf::Vector2f(450, 380));
     
     pauseMenu.addButton("MAIN MENU", [this]() {
-        std::cout << "🏠 Выход в главное меню" << std::endl;
         changeState(GameState::MAIN_MENU);
     }, sf::Vector2f(450, 460));
     
     pauseMenu.addButton("EXIT GAME", [this]() {
-        std::cout << "🚪 Выход из игры" << std::endl;
         changeState(GameState::EXIT);
     }, sf::Vector2f(450, 540));
 
@@ -225,22 +206,17 @@ void Game::setupLevelSelectMenu() {
     levelSelectMenu.setTitle("SELECT LEVEL");
     levelSelectMenu.clearButtons();
     
-    // 👇 ИСПРАВЛЯЕМ: используем правильное количество открытых уровней
     int unlockedLevels = levelManager.getUnlockedLevels();
-    std::cout << "🔄 Настройка меню выбора уровня. Открыто: " << unlockedLevels << std::endl;
     
-    // Динамически создаём кнопки для доступных уровней
     for (int i = 1; i <= 5; ++i) {
         if (i <= unlockedLevels) {
             levelSelectMenu.addButton("LEVEL " + std::to_string(i), [this, i]() {
-                std::cout << "🎮 Выбран уровень " << i << std::endl;
                 levelManager.loadLevel(i);
                 changeState(GameState::PLAYING);
-            }, sf::Vector2f(450, 200 + i * 80));
+            }, sf::Vector2f(450, 150 + i * 70));
         } else {
             levelSelectMenu.addButton("LOCKED", []() {
-                std::cout << "🔒 Уровень заблокирован!" << std::endl;
-            }, sf::Vector2f(450, 200 + i * 80));
+            }, sf::Vector2f(450, 150 + i * 70)); 
         }
     }
     
@@ -250,14 +226,11 @@ void Game::setupLevelSelectMenu() {
 }
 
 void Game::handleGameEvents(const sf::Event& event) {
-    // Обработка клавиши E для взаимодействия с посылками
     if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
         if (keyEvent->scancode == sf::Keyboard::Scancode::E) {
-            std::cout << "🎮 Нажата E в игровом режиме" << std::endl;
-            levelManager.getCurrentLevel().handleEInteraction(); // ИСПРАВЛЕНО
+            levelManager.getCurrentLevel().handleEInteraction();
         }
         
-        // Обработка Escape для паузы
         if (keyEvent->scancode == sf::Keyboard::Scancode::Escape) {
             changeState(GameState::PAUSED);
         }
@@ -265,7 +238,6 @@ void Game::handleGameEvents(const sf::Event& event) {
 }
 
 void Game::handleContinuousInput() {
-    // Проверяем состояние клавиш движения
     bool moveLeft = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::A) || 
                     sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Left);
     
@@ -278,7 +250,6 @@ void Game::handleContinuousInput() {
     bool moveDown = sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) || 
                     sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Down);
     
-    // Создаем вектор движения
     sf::Vector2f movement(0.f, 0.f);
     
     if (moveLeft) movement.x -= 1.f;
@@ -286,19 +257,16 @@ void Game::handleContinuousInput() {
     if (moveUp) movement.y -= 1.f;
     if (moveDown) movement.y += 1.f;
     
-    // Нормализуем вектор если есть движение
     if (movement.x != 0.f || movement.y != 0.f) {
         float length = std::sqrt(movement.x * movement.x + movement.y * movement.y);
         movement.x /= length;
         movement.y /= length;
     }
     
-    // Передаем движение игроку
-    levelManager.getCurrentLevel().getPlayer().move(movement); // ИСПРАВЛЕНО
+    levelManager.getCurrentLevel().getPlayer().move(movement);
     
-    // Обработка прыжка
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space)) {
-        levelManager.getCurrentLevel().getPlayer().jump(); // ИСПРАВЛЕНО
+        levelManager.getCurrentLevel().getPlayer().jump();
     }
 }
 
@@ -307,11 +275,9 @@ void Game::loadNextLevel() {
     int nextLevel = currentLevel + 1;
     
     if (nextLevel <= 5 && nextLevel <= levelManager.getUnlockedLevels()) {
-        std::cout << "🎮 Загрузка следующего уровня: " << nextLevel << std::endl;
         levelManager.loadLevel(nextLevel);
         changeState(GameState::PLAYING);
     } else {
-        std::cout << "❌ Следующий уровень недоступен, переход к выбору уровня" << std::endl;
         setupLevelSelectMenu();
         changeState(GameState::LEVEL_SELECT);
     }
@@ -319,47 +285,37 @@ void Game::loadNextLevel() {
 
 void Game::setupVictoryMenu() {
     victoryMenu.setMainMenuCallback([this]() {
-        std::cout << "🏠 Возврат в главное меню с экрана победы" << std::endl;
         changeState(GameState::MAIN_MENU);
     });
     
     victoryMenu.setExitCallback([this]() {
-        std::cout << "🚪 Выход из игры с экрана победы" << std::endl;
         changeState(GameState::EXIT);
     });
     
     victoryMenu.setNextLevelCallback([this]() {
-        std::cout << "➡️ Переход к следующему уровню" << std::endl;
         loadNextLevel();
     });
     
-    std::cout << "✅ Экран победы настроен!" << std::endl;
 }
 
 void Game::checkLevelCompletion() {
     if (levelManager.getCurrentLevel().isLevelComplete()) {
         levelManager.markLevelComplete();
         int completedLevel = levelManager.getCurrentLevelNumber();
-        std::cout << "🎉 Уровень " << completedLevel << " завершён!" << std::endl;
         
-        // 🔥 УСТАНАВЛИВАЕМ ИНФОРМАЦИЮ О УРОВНЕ И ПОКАЗЫВАЕМ ЭКРАН ПОБЕДЫ
-        victoryMenu.setLevelInfo(completedLevel, 5); // 5 - всего уровней
+        victoryMenu.setLevelInfo(completedLevel, 5);
         changeState(GameState::VICTORY);
     }
 }
 
-
 void Game::setupOptionsMenu() {
     optionsMenu.setBackCallback([this]() {
-        std::cout << "🔙 Возврат из настроек" << std::endl;
         changeState(previousState);
     });
     
     optionsMenu.setVolumeCallback([this](float volume) {
-        std::cout << "🔊 Изменение громкости: " << volume << "%" << std::endl;
         soundSystem.setMusicVolume(volume);
     });
     
-    // Устанавливаем текущую громкость
     optionsMenu.setMusicVolume(soundSystem.getMusicVolume());
 }

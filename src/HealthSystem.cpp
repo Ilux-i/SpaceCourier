@@ -16,54 +16,42 @@ void HealthSystem::loadTexture() {
     }
     
     textureLoaded = true;
-    std::cout << "✅ Текстура сердца загружена успешно!" << std::endl;
 }
 
 void HealthSystem::createHearts() {
     hearts.clear();
     
-    // СОЗДАЕМ ЛОКАЛЬНУЮ ПУСТУЮ ТЕКСТУРУ
     sf::Texture emptyTexture;
     
     for (int i = 0; i < maxHealth; ++i) {
-        // ИНИЦИАЛИЗИРУЕМ SPRITE С ТЕКСТУРОЙ
+
         sf::Sprite heart(textureLoaded ? heartTexture : emptyTexture);
         
         if (textureLoaded) {
             heart.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-            heart.setScale(sf::Vector2f(2.0f, 2.0f)); // Ваш увеличенный размер
+            heart.setScale(sf::Vector2f(2.0f, 2.0f));
         }
         
-        // Позиционируем сердца в правом верхнем углу
-        heart.setPosition(sf::Vector2f(1100.f - i * 70.f, 20.f)); // Увеличил расстояние
+        heart.setPosition(sf::Vector2f(1100.f - i * 70.f, 20.f));
         
-        // Устанавливаем прозрачность в зависимости от здоровья
         if (i < health) {
-            heart.setColor(sf::Color::White); // Полное сердце
+            heart.setColor(sf::Color::White);
         } else {
-            heart.setColor(sf::Color(100, 100, 100, 150)); // Серое прозрачное сердце
+            heart.setColor(sf::Color(100, 100, 100, 150));
         }
         
         hearts.push_back(heart);
     }
     
-    std::cout << "❤️ Обновлено отображение сердец: " << health << "/" << maxHealth << std::endl;
 }
 
-// Остальные методы остаются без изменений...
 void HealthSystem::takeDamage() {
     if (!isInvincible && health > 0) {
         health--;
-        invincibilityTimer = 1.5f; // 1.5 секунды неуязвимости
+        invincibilityTimer = 1.5f;
         isInvincible = true;
         
         createHearts();
-        
-        std::cout << "💔 Получен урон! Здоровье: " << health << "/" << maxHealth << std::endl;
-        
-        if (health <= 0) {
-            std::cout << "💀 Игрок умер!" << std::endl;
-        }
     }
 }
 
@@ -72,8 +60,6 @@ void HealthSystem::heal() {
         health++;
         
         createHearts();
-        
-        std::cout << "❤️ Восстановлено здоровье: " << health << "/" << maxHealth << std::endl;
     }
 }
 
@@ -91,8 +77,6 @@ void HealthSystem::reset() {
     isInvincible = false;
     
     createHearts();
-    
-    std::cout << "🔄 Здоровье сброшено: " << health << "/" << maxHealth << std::endl;
 }
 
 void HealthSystem::update(float deltaTime) {
@@ -100,7 +84,6 @@ void HealthSystem::update(float deltaTime) {
         invincibilityTimer -= deltaTime;
         if (invincibilityTimer <= 0.f) {
             isInvincible = false;
-            std::cout << "🛡️ Неуязвимость закончилась" << std::endl;
         }
     }
 }

@@ -3,15 +3,13 @@
 
 Package::Package(const sf::Vector2f& position) 
     : carried(false), delivered(false), textureLoaded(false),
-      sprite(texture) // Инициализируем с текстурой
+      sprite(texture)
 {
-    // Базовый геометрический shape (fallback)
     shape.setSize(sf::Vector2f(30.f, 30.f));
-    shape.setFillColor(sf::Color(255, 215, 0)); // Золотой цвет посылки
+    shape.setFillColor(sf::Color(255, 215, 0));
     shape.setPosition(position);
     this->position = position;
     
-    // Загружаем текстуру
     loadTexture();
 }
 
@@ -24,16 +22,12 @@ void Package::loadTexture() {
     
     textureLoaded = true;
     
-    // Настраиваем спрайт
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
-    sprite.setScale(sf::Vector2f(0.9f, 0.9f)); // Немного меньше для соответствия размерам
+    sprite.setScale(sf::Vector2f(0.9f, 0.9f));
     sprite.setPosition(position);
-    
-    std::cout << "✅ Текстура посылки загружена успешно!" << std::endl;
 }
 
 void Package::update(float deltaTime) {
-    // ОБНОВЛЯЕМ ПОЗИЦИЮ ФОРМЫ И СПРАЙТА
     if (textureLoaded) {
         sprite.setPosition(position);
     } else {
@@ -67,15 +61,15 @@ void Package::setCarried(bool carried) {
     this->carried = carried;
     if (textureLoaded) {
         if (carried) {
-            sprite.setColor(sf::Color(200, 165, 0)); // Темнее когда несут
+            sprite.setColor(sf::Color(200, 165, 0));
         } else {
-            sprite.setColor(sf::Color::White); // Обычный цвет
+            sprite.setColor(sf::Color::White);
         }
     } else {
         if (carried) {
-            shape.setFillColor(sf::Color(200, 165, 0)); // Темнее когда несут
+            shape.setFillColor(sf::Color(200, 165, 0));
         } else {
-            shape.setFillColor(sf::Color(255, 215, 0)); // Обычный золотой
+            shape.setFillColor(sf::Color(255, 215, 0));
         }
     }
 }
@@ -88,15 +82,15 @@ void Package::setDelivered(bool delivered) {
     this->delivered = delivered;
     if (textureLoaded) {
         if (delivered) {
-            sprite.setColor(sf::Color(100, 100, 100, 100)); // Полупрозрачная серая при доставке
+            sprite.setColor(sf::Color(100, 100, 100, 100));
         } else {
-            sprite.setColor(sf::Color::White); // Возвращаем нормальный цвет
+            sprite.setColor(sf::Color::White);
         }
     } else {
         if (delivered) {
-            shape.setFillColor(sf::Color(100, 100, 100, 100)); // Полупрозрачная серая при доставке
+            shape.setFillColor(sf::Color(100, 100, 100, 100));
         } else {
-            shape.setFillColor(sf::Color(255, 215, 0)); // Возвращаем золотой цвет
+            shape.setFillColor(sf::Color(255, 215, 0));
         }
     }
 }

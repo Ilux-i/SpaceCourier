@@ -34,8 +34,6 @@ void Enemy::loadTexture() {
     sprite.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(32, 32)));
     sprite.setScale(sf::Vector2f(1.25f, 1.25f));
     sprite.setPosition(position);
-    
-    std::cout << "✅ Текстура врага загружена успешно!" << std::endl;
 }
 
 void Enemy::update(float deltaTime) {
@@ -58,19 +56,15 @@ void Enemy::update(float deltaTime) {
         return;
     }
     
-    // СОХРАНЯЕМ ПРЕДЫДУЩЕЕ НАПРАВЛЕНИЕ ДЛЯ ПРОВЕРКИ ИЗМЕНЕНИЯ
     sf::Vector2f oldDirection = patrolDirection;
     
     updatePatrol(deltaTime);
     
-    // ЕСЛИ НАПРАВЛЕНИЕ ИЗМЕНИЛОСЬ - ОБНОВЛЯЕМ ОТРАЖЕНИЕ СПРАЙТА
     if (textureLoaded && (patrolDirection.x != oldDirection.x)) {
         if (patrolDirection.x < 0) {
-            // Движение влево - отражаем спрайт
             sprite.setScale(sf::Vector2f(-1.25f, 1.25f));
-            sprite.setOrigin(sf::Vector2f(32.f, 0.f)); // Устанавливаем origin для правильного отражения
+            sprite.setOrigin(sf::Vector2f(32.f, 0.f));
         } else if (patrolDirection.x > 0) {
-            // Движение вправо - нормальный спрайт
             sprite.setScale(sf::Vector2f(1.25f, 1.25f));
             sprite.setOrigin(sf::Vector2f(0.f, 0.f));
         }
@@ -86,7 +80,6 @@ void Enemy::update(float deltaTime) {
 void Enemy::draw(sf::RenderWindow& window) const {
     if (textureLoaded) {
         window.draw(sprite);
-        // УБИРАЕМ ДЕБАГ-КОНТУР
     } else {
         window.draw(shape);
     }
@@ -110,8 +103,6 @@ void Enemy::onCollisionWithPlayer() {
         } else {
             shape.setFillColor(sf::Color(150, 150, 150, 255));
         }
-        
-        std::cout << "🤖 Дрон оглушен на 2 секунды!" << std::endl;
     }
 }
 
@@ -128,14 +119,12 @@ void Enemy::reset() {
     active = true;
     stunTimer = 0.f;
     
-    // 👇 ВОССТАНАВЛИВАЕМ ВНЕШНИЙ ВИД
     if (textureLoaded) {
         sprite.setColor(sf::Color::White);
     } else {
         shape.setFillColor(sf::Color(255, 100, 100, 255));
     }
     
-    // 👇 ВОССТАНАВЛИВАЕМ ПАТРУЛИРОВАНИЕ
     patrolDirection = endPosition - startPosition;
     float length = std::sqrt(patrolDirection.x * patrolDirection.x + patrolDirection.y * patrolDirection.y);
     if (length > 0) {
@@ -162,6 +151,5 @@ void Enemy::updatePatrol(float deltaTime) {
         (endPosition.y - startPosition.y) * (endPosition.y - startPosition.y)
     )) {
         patrolDirection = -patrolDirection;
-        std::cout << "🔄 Дрон развернулся!" << std::endl;
     }
 }

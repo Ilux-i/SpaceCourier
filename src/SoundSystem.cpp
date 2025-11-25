@@ -24,18 +24,15 @@ bool SoundSystem::initialize() {
 void SoundSystem::update(float deltaTime) {}
 
 void SoundSystem::playMusic(MusicType musicType, bool loop) {
-    // Если уже играет эта музыка - ничего не делаем
     if (currentMusic == musicType && currentMusicPlayer && 
         currentMusicPlayer->getStatus() == sf::Music::Status::Playing) {
         return;
     }
     
-    // Останавливаем текущую музыку
     if (currentMusicPlayer) {
         currentMusicPlayer->stop();
     }
     
-    // Создаём новый плеер
     currentMusicPlayer = std::make_unique<sf::Music>();
     std::string path = getMusicPath(musicType);
     
@@ -45,7 +42,6 @@ void SoundSystem::playMusic(MusicType musicType, bool loop) {
         return;
     }
     
-    // Настраиваем музыку
     currentMusicPlayer->setVolume(musicVolume);
     currentMusicPlayer->play();
     currentMusic = musicType;

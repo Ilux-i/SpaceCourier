@@ -3,19 +3,16 @@
 
 AcidPool::AcidPool(const sf::Vector2f& size, const sf::Vector2f& position) 
     : playerInAcid(false), damageCooldown(0.f), textureLoaded(false),
-      sprite(texture) // Инициализируем с текстурой
+      sprite(texture)
 {
-    // Базовый геометрический shape (fallback)
     shape.setSize(size);
     shape.setPosition(position);
     this->position = position;
     
-    // Стиль для fallback
-    shape.setFillColor(sf::Color(0, 255, 0, 200)); // Ярко-зелёный
-    shape.setOutlineColor(sf::Color(255, 255, 0, 255)); // Жёлтая обводка
+    shape.setFillColor(sf::Color(0, 255, 0, 200));
+    shape.setOutlineColor(sf::Color(255, 255, 0, 255));
     shape.setOutlineThickness(2.f);
     
-    // Загружаем текстуру
     loadTexture();
 }
 
@@ -28,7 +25,6 @@ void AcidPool::loadTexture() {
     
     textureLoaded = true;
     
-    // Настраиваем спрайт - ПОДСТРАИВАЕМ ТЕКСТУРУ ПОД РАЗМЕРЫ ОБЪЕКТА
     sf::Vector2f poolSize = shape.getSize();
     
     sprite.setTexture(texture);
@@ -37,21 +33,17 @@ void AcidPool::loadTexture() {
         sf::Vector2i(static_cast<int>(poolSize.x), static_cast<int>(poolSize.y))
     ));
     
-    // Устанавливаем повторение текстуры
     texture.setRepeated(true);
     
     sprite.setPosition(position);
     
-    std::cout << "✅ Текстура кислоты загружена успешно!" << std::endl;
 }
 
 void AcidPool::update(float deltaTime) {
-    // СТАТИЧЕСКИЙ СПРАЙТ - БЕЗ АНИМАЦИИ МЕРЦАНИЯ
     if (playerInAcid) {
         damageCooldown -= deltaTime;
     }
     
-    // Обновляем позицию
     if (textureLoaded) {
         sprite.setPosition(position);
     } else {
@@ -88,5 +80,5 @@ float AcidPool::getDamageCooldown() const {
 }
 
 void AcidPool::resetDamageCooldown() {
-    damageCooldown = 1.0f; // 1 секунда между получением урона
+    damageCooldown = 1.0f;
 }

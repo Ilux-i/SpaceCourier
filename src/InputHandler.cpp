@@ -4,14 +4,12 @@
 
 InputHandler::InputHandler() {}
 
-// Обновляет состояние клавиши
 void InputHandler::update() {
     for (auto& [key, state] : keyStates_) {
         state.wasPressed = state.isPressed;
     }
 }
 
-// Обработчик событий
 void InputHandler::handleEvent(const sf::Event& event) {
     if (event.is<sf::Event::KeyPressed>() || event.is<sf::Event::KeyReleased>()) {
         const sf::Event::KeyPressed* keyPressedEvent = event.getIf<sf::Event::KeyPressed>();
@@ -30,10 +28,8 @@ void InputHandler::handleEvent(const sf::Event& event) {
             return;
         }
         
-        // Обновляем состояние клавиши
         keyStates_[key].isPressed = isPressed;
         
-        // Если клавиша только что нажата - вызываем callback
         if (isPressed && actionCallbacks_.count(key)) {
             std::cout << "🎯 Вызов callback для клавиши: " << static_cast<int>(key) << std::endl;
             for (const auto& callback : actionCallbacks_.at(key)) {
@@ -43,24 +39,20 @@ void InputHandler::handleEvent(const sf::Event& event) {
     }
 }
 
-// Гарантирует выполнение функции только при взаимодействии с кнопками
 void InputHandler::bindAction(sf::Keyboard::Scancode key, std::function<void()> pressedCallback) {
     actionCallbacks_[key].push_back(pressedCallback);
 }
 
-// Проверка на зажатие
 bool InputHandler::isKeyPressed(sf::Keyboard::Scancode key) const {
     auto it = keyStates_.find(key);
     return it != keyStates_.end() && it->second.isPressed;
 }
 
-// Проверка на нажатие
 bool InputHandler::isKeyJustPressed(sf::Keyboard::Scancode key) const {
     auto it = keyStates_.find(key);
     return it != keyStates_.end() && it->second.isPressed && !it->second.wasPressed;
 }
 
-// Движение
 sf::Vector2f InputHandler::getMovementVector() const {
     sf::Vector2f movement(0.f, 0.f);
     
